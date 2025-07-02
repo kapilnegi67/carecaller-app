@@ -3,12 +3,12 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "your-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "your-app-id"
+  apiKey: "AIzaSyBMd4Cw1SXwp57mHeYE2rXHX267pWFscak",
+  authDomain: "carecaller-app.firebaseapp.com",
+  projectId: "carecaller-app",
+  storageBucket: "carecaller-app.firebasestorage.app",
+  messagingSenderId: "667008149387",
+  appId: "1:667008149387:web:19b4d3a2e6c8492d8cb18e"
 };
 
 const app = initializeApp(firebaseConfig);
