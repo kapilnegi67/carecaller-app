@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuth } from '../contexts/AuthContext';
 
 interface RegisterScreenProps {
@@ -24,9 +25,10 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
     firstName: '',
     lastName: '',
     phone: '',
-    dateOfBirth: '',
+    dateOfBirth: new Date(),
   });
   const [loading, setLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const { register } = useAuth();
 
   const handleRegister = async () => {
@@ -53,7 +55,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
         firstName,
         lastName,
         phone: phone || undefined,
-        dateOfBirth: formData.dateOfBirth || undefined,
+        dateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString().split('T')[0] : undefined,
       });
     } catch (error: any) {
       Alert.alert('Registration Failed', error.message);
@@ -62,8 +64,15 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
     }
   };
 
-  const updateFormData = (field: string, value: string) => {
+  const updateFormData = (field: string, value: string | Date) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setFormData(prev => ({ ...prev, dateOfBirth: selectedDate }));
+    }
   };
 
   return (
@@ -112,12 +121,24 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
             keyboardType="phone-pad"
           />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Date of Birth (YYYY-MM-DD)"
-            value={formData.dateOfBirth}
-            onChangeText={(value) => updateFormData('dateOfBirth', value)}
-          />
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={styles.dateButtonText}>
+              Date of Birth: {formData.dateOfBirth.toLocaleDateString()}
+            </Text>
+          </TouchableOpacity>
+
+          {showDatePicker && (
+            <DateTimePicker
+              value={formData.dateOfBirth}
+              mode="date"
+              display="default"
+              onChange={onDateChange}
+              maximumDate={new Date()}
+            />
+          )}
 
           <TextInput
             style={styles.input}
@@ -196,6 +217,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: '#e1e8ed',
+  },
+  dateButton: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e1e8ed',
+  },
+  dateButtonText: {
+    fontSize: 16,
+    color: '#2c3e50',
   },
   button: {
     backgroundColor: '#27ae60',

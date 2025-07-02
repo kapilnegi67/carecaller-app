@@ -7,7 +7,9 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
+  Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../../firebase.config';
@@ -18,7 +20,7 @@ export const ProfileScreen: React.FC = () => {
     firstName: '',
     lastName: '',
     phone: '',
-    dateOfBirth: '',
+    dateOfBirth: new Date(),
     emergencyContact: {
       name: '',
       phone: '',
@@ -26,6 +28,7 @@ export const ProfileScreen: React.FC = () => {
     },
   });
   const [loading, setLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
     if (userProfile) {
@@ -33,7 +36,7 @@ export const ProfileScreen: React.FC = () => {
         firstName: userProfile.firstName || '',
         lastName: userProfile.lastName || '',
         phone: userProfile.phone || '',
-        dateOfBirth: userProfile.dateOfBirth || '',
+        dateOfBirth: userProfile.dateOfBirth ? new Date(userProfile.dateOfBirth) : new Date(),
         emergencyContact: userProfile.emergencyContact || {
           name: '',
           phone: '',
@@ -87,6 +90,13 @@ export const ProfileScreen: React.FC = () => {
     }
   };
 
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setFormData(prev => ({ ...prev, dateOfBirth: selectedDate }));
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -120,12 +130,24 @@ export const ProfileScreen: React.FC = () => {
           keyboardType="phone-pad"
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Date of Birth (YYYY-MM-DD)"
-          value={formData.dateOfBirth}
-          onChangeText={(value) => updateFormData('dateOfBirth', value)}
-        />
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={styles.dateButtonText}>
+            Date of Birth: {formData.dateOfBirth.toLocaleDateString()}
+          </Text>
+        </TouchableOpacity>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={formData.dateOfBirth}
+            mode="date"
+            display="default"
+            onChange={onDateChange}
+            maximumDate={new Date()}
+          />
+        )}
       </View>
 
       <View style={styles.section}>
@@ -215,6 +237,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: '#e1e8ed',
+  },
+  dateButton: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e1e8ed',
+  },
+  dateButtonText: {
+    fontSize: 16,
+    color: '#2c3e50',
   },
   button: {
     backgroundColor: '#3498db',
