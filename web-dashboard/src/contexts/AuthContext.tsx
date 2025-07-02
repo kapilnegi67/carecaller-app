@@ -6,7 +6,7 @@ import { Agent } from '../types';
 
 interface AuthContextType {
   currentUser: FirebaseUser | null;
-  agentProfile: Agent | null;
+  adminProfile: Agent | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -24,7 +24,7 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [agentProfile, setAgentProfile] = useState<Agent | null>(null);
+  const [adminProfile, setAdminProfile] = useState<Agent | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,15 +32,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCurrentUser(user);
       
       if (user) {
-        const agentDoc = await getDoc(doc(db, 'agents', user.uid));
-        if (agentDoc.exists()) {
-          setAgentProfile({
-            ...agentDoc.data(),
-            createdAt: agentDoc.data().createdAt.toDate(),
+        const adminDoc = await getDoc(doc(db, 'agents', user.uid));
+        if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+          setAdminProfile({
+            ...adminDoc.data(),
+            createdAt: adminDoc.data().createdAt.toDate(),
           } as Agent);
+        } else {
+          setAdminProfile(null);
+          await signOut(auth); // Sign out non-admin users
         }
       } else {
-        setAgentProfile(null);
+        setAdminProfile(null);
       }
       
       setLoading(false);
@@ -50,7 +53,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      const adminDoc = await getDoc(doc(db, 'agents', userCredential.user.uid));
+      if (!adminDoc.exists() || adminDoc.data().role !== 'admin') {
+        await signOut(auth);
+        throw new Error('Access denied. Admin privileges required.');
+      }
+    } catch (error) {
+      throw error;
+    }
   };
 
   const logout = async () => {
@@ -59,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value = {
     currentUser,
-    agentProfile,
+    adminProfile,
     loading,
     login,
     logout,
