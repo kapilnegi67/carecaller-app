@@ -20,7 +20,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [resetLoading, setResetLoading] = useState(false);
+  const { login, resetPassword } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -38,6 +39,27 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      Alert.alert('Email Required', 'Please enter your email address to reset your password');
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      await resetPassword(email);
+      Alert.alert(
+        'Password Reset Sent',
+        'A password reset link has been sent to your email address. Please check your inbox and follow the instructions to reset your password.',
+        [{ text: 'OK' }]
+      );
+    } catch (error: any) {
+      Alert.alert('Reset Failed', error.message);
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -46,7 +68,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
           <Text style={styles.title}>CareCaller</Text>
-          <Text style={styles.subtitle}>Welcome back</Text>
+          <Text style={styles.subtitle}>We're here to care for you</Text>
         </View>
 
         <View style={styles.form}>
@@ -80,6 +102,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
 
           <TouchableOpacity
+            style={styles.forgotPasswordButton}
+            onPress={handleForgotPassword}
+            disabled={resetLoading}
+          >
+            <Text style={styles.forgotPasswordText}>
+              {resetLoading ? 'Sending reset email...' : 'Forgot your password?'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={styles.linkButton}
             onPress={() => navigation.navigate('Register')}
           >
@@ -96,60 +128,93 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f7f9fc',
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
+    padding: 24,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 48,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 8,
+    fontSize: 36,
+    fontWeight: '700',
+    color: '#2c5282',
+    marginBottom: 12,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#7f8c8d',
+    fontSize: 18,
+    color: '#4a5568',
+    fontWeight: '400',
+    textAlign: 'center',
   },
   form: {
     width: '100%',
   },
   input: {
     backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: 12,
+    padding: 18,
     marginBottom: 16,
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#e1e8ed',
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   button: {
-    backgroundColor: '#3498db',
-    borderRadius: 8,
-    padding: 16,
+    backgroundColor: '#4299e1',
+    borderRadius: 12,
+    padding: 18,
     alignItems: 'center',
     marginBottom: 16,
+    shadowColor: '#4299e1',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonDisabled: {
-    backgroundColor: '#bdc3c7',
+    backgroundColor: '#a0aec0',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  forgotPasswordButton: {
+    alignItems: 'center',
+    padding: 12,
+    marginBottom: 8,
+  },
+  forgotPasswordText: {
+    color: '#38a169',
+    fontSize: 15,
+    fontWeight: '500',
   },
   linkButton: {
     alignItems: 'center',
-    padding: 8,
+    padding: 12,
   },
   linkText: {
-    color: '#3498db',
+    color: '#4299e1',
     fontSize: 14,
+    fontWeight: '500',
   },
 });
