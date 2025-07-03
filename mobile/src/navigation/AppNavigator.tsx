@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { ProfileEditScreen } from '../screens/ProfileEditScreen';
 import { ScheduleCallScreen } from '../screens/ScheduleCallScreen';
 import { CallHistoryScreen } from '../screens/CallHistoryScreen';
 import { VoiceCallScreen } from '../screens/VoiceCallScreen';
@@ -22,19 +23,27 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
-const MainStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="MainTabs" component={MainTabs} />
-    <Stack.Screen 
-      name="VoiceCall" 
-      component={VoiceCallScreen}
-      options={{ 
-        gestureEnabled: false,
-        headerShown: false 
-      }}
-    />
-  </Stack.Navigator>
-);
+const MainStack = () => {
+  const { isNewUser } = useAuth();
+  
+  return (
+    <Stack.Navigator 
+      screenOptions={{ headerShown: false }}
+      initialRouteName={isNewUser ? "ProfileEdit" : "MainTabs"}
+    >
+      <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
+      <Stack.Screen name="MainTabs" component={MainTabs} />
+      <Stack.Screen 
+        name="VoiceCall" 
+        component={VoiceCallScreen}
+        options={{ 
+          gestureEnabled: false,
+          headerShown: false 
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
 
 const MainTabs = () => (
   <Tab.Navigator
@@ -78,15 +87,15 @@ const MainTabs = () => (
 );
 
 export const AppNavigator: React.FC = () => {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, loading, isNewUser } = useAuth();
 
   if (loading) {
-    return null; // You could add a loading screen here
+    return null;
   }
 
   return (
     <NavigationContainer>
-      {currentUser ? <MainStack /> : <AuthStack />}
+      {currentUser ? (isNewUser ? <MainStack /> : <MainStack />) : <AuthStack />}
     </NavigationContainer>
   );
 };

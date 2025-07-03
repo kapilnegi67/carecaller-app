@@ -15,13 +15,13 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../../firebase.config';
 
-export const ProfileScreen: React.FC = () => {
-  const { userProfile, logout } = useAuth();
+export const ProfileEditScreen: React.FC = () => {
+  const { userProfile, markProfileComplete, currentUser } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     phone: '',
-    dateOfBirth: new Date().toISOString().split('T')[0], // Store as YYYY-MM-DD string
+    dateOfBirth: new Date().toISOString().split('T')[0],
     emergencyContact: {
       name: '',
       phone: '',
@@ -49,32 +49,22 @@ export const ProfileScreen: React.FC = () => {
   }, [userProfile]);
 
   const handleSave = async () => {
-    if (!userProfile) return;
+    if (!currentUser) return;
 
     setLoading(true);
     try {
-      const userRef = doc(db, 'users', userProfile.id);
+      const userRef = doc(db, 'users', currentUser.uid);
       await updateDoc(userRef, {
         ...formData,
         updatedAt: new Date(),
       });
-      Alert.alert('Success', 'Profile updated successfully');
+      markProfileComplete();
+      Alert.alert('Success', 'Profile completed successfully');
     } catch (error: any) {
       Alert.alert('Error', 'Failed to update profile: ' + error.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', onPress: logout, style: 'destructive' },
-      ]
-    );
   };
 
   const updateFormData = (field: string, value: string) => {
@@ -113,7 +103,8 @@ export const ProfileScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>My Profile</Text>
+        <Text style={styles.title}>Complete Your Profile</Text>
+        <Text style={styles.subtitle}>Please fill in your details to continue</Text>
       </View>
 
       <View style={styles.section}>
@@ -253,15 +244,8 @@ export const ProfileScreen: React.FC = () => {
         disabled={loading}
       >
         <Text style={styles.buttonText}>
-          {loading ? 'Saving...' : 'Save Profile'}
+          {loading ? 'Saving...' : 'Complete Profile'}
         </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={handleLogout}
-      >
-        <Text style={styles.logoutButtonText}>Logout</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -283,6 +267,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#2c3e50',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#7f8c8d',
+    marginTop: 8,
   },
   section: {
     backgroundColor: 'white',
@@ -378,19 +367,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#bdc3c7',
   },
   buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  logoutButton: {
-    backgroundColor: '#e74c3c',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    margin: 16,
-    marginTop: 8,
-  },
-  logoutButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',

@@ -8,10 +8,12 @@ interface AuthContextType {
   currentUser: FirebaseUser | null;
   userProfile: User | null;
   loading: boolean;
+  isNewUser: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, userData: Partial<User>) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  markProfileComplete: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,6 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -36,10 +39,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user) {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists()) {
-          setUserProfile(userDoc.data() as User);
+          const userData = userDoc.data() as User;
+          setUserProfile(userData);
+          
+          if (!userData.firstName || !userData.lastName || !userData.phone) {
+            setIsNewUser(true);
+          }
+        } else {
+          setIsNewUser(true);
         }
       } else {
         setUserProfile(null);
+        setIsNewUser(false);
       }
       
       setLoading(false);
@@ -70,10 +81,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     await setDoc(doc(db, 'users', user.uid), userProfile);
     setUserProfile(userProfile);
+    setIsNewUser(true);
   };
 
   const logout = async () => {
     await signOut(auth);
+    setCurrentUser(null);
+    setUserProfile(null);
+    setIsNewUser(false);
+  };
+
+  const markProfileComplete = () => {
+    setIsNewUser(false);
   };
 
   const resetPassword = async (email: string) => {
@@ -84,10 +103,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     currentUser,
     userProfile,
     loading,
+    isNewUser,
     login,
     register,
     logout,
     resetPassword,
+    markProfileComplete,
   };
 
   return (

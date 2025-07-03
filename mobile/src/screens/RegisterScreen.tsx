@@ -12,6 +12,7 @@ import {
   Modal,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
+import MonthPicker from 'react-native-month-year-picker';
 import { useAuth } from '../contexts/AuthContext';
 
 interface RegisterScreenProps {
@@ -30,6 +31,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
   });
   const [loading, setLoading] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -161,6 +163,13 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
     setShowCalendar(false);
   };
 
+  const onMonthYearChange = (event: any, newDate: Date | undefined) => {
+    setShowMonthPicker(false);
+    if (newDate) {
+      setFormData(prev => ({ ...prev, dateOfBirth: newDate.toISOString().split('T')[0] }));
+    }
+  };
+
   const formatDateForDisplay = (dateString: string) => {
     if (!dateString) return 'Select Date of Birth';
     const date = new Date(dateString);
@@ -223,14 +232,35 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
           {errors.dateOfBirth ? (
             <Text style={styles.errorText}>{errors.dateOfBirth}</Text>
           ) : null}
-          <TouchableOpacity
-            style={[styles.dateButton, errors.dateOfBirth && styles.inputError]}
-            onPress={() => setShowCalendar(true)}
-          >
-            <Text style={styles.dateButtonText}>
-              {formatDateForDisplay(formData.dateOfBirth)}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.datePickerContainer}>
+            <TouchableOpacity
+              style={[styles.dateButton, errors.dateOfBirth && styles.inputError]}
+              onPress={() => setShowMonthPicker(true)}
+            >
+              <Text style={styles.dateButtonText}>
+                Month/Year: {formatDateForDisplay(formData.dateOfBirth)}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.dateButton, errors.dateOfBirth && styles.inputError]}
+              onPress={() => setShowCalendar(true)}
+            >
+              <Text style={styles.dateButtonText}>
+                Exact Date: {formatDateForDisplay(formData.dateOfBirth)}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {showMonthPicker && (
+            <MonthPicker
+              onChange={onMonthYearChange}
+              value={new Date(formData.dateOfBirth)}
+              minimumDate={new Date(1900, 0)}
+              maximumDate={new Date()}
+              locale="en"
+            />
+          )}
 
           <Modal
             visible={showCalendar}
@@ -416,11 +446,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e1e8ed',
   },
+  datePickerContainer: {
+    marginBottom: 12,
+  },
   dateButton: {
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 18,
-    marginBottom: 16,
+    marginBottom: 8,
     borderWidth: 2,
     borderColor: '#e2e8f0',
     shadowColor: '#000',
