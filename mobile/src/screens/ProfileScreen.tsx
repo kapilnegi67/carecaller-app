@@ -16,7 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../../firebase.config';
 
 export const ProfileScreen: React.FC = () => {
-  const { userProfile, logout } = useAuth();
+  const { userProfile, logout, deleteAccount } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -73,6 +73,28 @@ export const ProfileScreen: React.FC = () => {
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Logout', onPress: logout, style: 'destructive' },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to permanently delete your account? This action cannot be undone and will remove all your data including scheduled calls and call history.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete Account', 
+          onPress: async () => {
+            try {
+              await deleteAccount();
+              Alert.alert('Account Deleted', 'Your account has been permanently deleted.');
+            } catch (error: any) {
+              Alert.alert('Error', 'Failed to delete account: ' + error.message);
+            }
+          }, 
+          style: 'destructive' 
+        },
       ]
     );
   };
@@ -263,6 +285,13 @@ export const ProfileScreen: React.FC = () => {
       >
         <Text style={styles.logoutButtonText}>Logout</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={handleDeleteAccount}
+      >
+        <Text style={styles.deleteButtonText}>Delete Account</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -391,6 +420,21 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   logoutButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  deleteButton: {
+    backgroundColor: '#c0392b',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    margin: 16,
+    marginTop: 8,
+    borderWidth: 2,
+    borderColor: '#a93226',
+  },
+  deleteButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',

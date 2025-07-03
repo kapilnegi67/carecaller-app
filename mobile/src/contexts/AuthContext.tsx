@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, deleteUser } from 'firebase/auth';
+import { doc, getDoc, setDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../firebase.config';
 import { User } from '../types';
 
@@ -14,6 +14,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   markProfileComplete: () => void;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,6 +38,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCurrentUser(user);
       
       if (user) {
+        const adminDoc = await getDoc(doc(db, 'agents', user.uid));
+        if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+          await signOut(auth);
+          setCurrentUser(null);
+          setUserProfile(null);
+          setIsNewUser(false);
+          setLoading(false);
+          return;
+        }
+
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists()) {
           const userData = userDoc.data() as User;
@@ -60,7 +71,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    
+    const adminDoc = await getDoc(doc(db, 'agents', userCredential.user.uid));
+    if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+      await signOut(auth);
+      throw new Error('Admin accounts cannot access the mobile app. Please use the web dashboard.');
+    }
   };
 
   const register = async (email: string, password: string, userData: Partial<User>) => {
@@ -99,6 +116,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await sendPasswordResetEmail(auth, email);
   };
 
+  const deleteAccount = async () => {
+    if (!currentUser) {
+      throw new Error('No user is currently logged in');
+    }
+
+    const userId = currentUser.uid;
+
+    try {
+      await deleteDoc(doc(db, 'users', userId));
+
+      const scheduledCallsQuery = query(
+        collection(db, 'scheduledCalls'),
+        where('userId', '==', userId)
+      );
+      const scheduledCallsSnapshot = await getDocs(scheduledCallsQuery);
+      const deleteScheduledCallsPromises = scheduledCallsSnapshot.docs.map(doc => 
+        deleteDoc(doc.ref)
+      );
+      await Promise.all(deleteScheduledCallsPromises);
+
+      const callHistoryQuery = query(
+        collection(db, 'callHistory'),
+        where('userId', '==', userId)
+      );
+      const callHistorySnapshot = await getDocs(callHistoryQuery);
+      const deleteCallHistoryPromises = callHistorySnapshot.docs.map(doc => 
+        deleteDoc(doc.ref)
+      );
+      await Promise.all(deleteCallHistoryPromises);
+
+      await deleteUser(currentUser);
+
+      setCurrentUser(null);
+      setUserProfile(null);
+      setIsNewUser(false);
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      throw error;
+    }
+  };
+
   const value = {
     currentUser,
     userProfile,
@@ -109,6 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     resetPassword,
     markProfileComplete,
+    deleteAccount,
   };
 
   return (
