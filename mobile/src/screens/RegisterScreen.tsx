@@ -30,6 +30,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
   });
   const [loading, setLoading] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   const { register } = useAuth();
 
   const handleRegister = async () => {
@@ -47,6 +48,11 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
 
     if (password.length < 6) {
       Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+
+    if (!disclaimerAccepted) {
+      Alert.alert('Error', 'Please read and accept the Terms of Service and Disclaimer to continue');
       return;
     }
 
@@ -198,10 +204,49 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
             autoCapitalize="none"
           />
 
+          <View style={styles.disclaimerContainer}>
+            <Text style={styles.disclaimerTitle}>Terms of Service & Disclaimer</Text>
+            <ScrollView style={styles.disclaimerTextContainer}>
+              <Text style={styles.disclaimerText}>
+                By creating an account, you acknowledge and agree to the following:
+              </Text>
+              <Text style={styles.disclaimerSection}>
+                <Text style={styles.disclaimerBold}>COMPANIONSHIP SERVICE ONLY:</Text> CareCaller is designed solely to provide companionship and social interaction services. This application is NOT a medical device, healthcare service, or medical advice platform.
+              </Text>
+              <Text style={styles.disclaimerSection}>
+                <Text style={styles.disclaimerBold}>NO MEDICAL ADVICE:</Text> CareCaller does not provide medical advice, diagnosis, or treatment. Any health-related conversations are for companionship purposes only. Always consult qualified healthcare professionals for medical concerns.
+              </Text>
+              <Text style={styles.disclaimerSection}>
+                <Text style={styles.disclaimerBold}>APPROPRIATE USE ONLY:</Text> This service is intended for appropriate, family-friendly conversations. Adult content, inappropriate language, or explicit conversations are strictly prohibited and may result in account termination.
+              </Text>
+              <Text style={styles.disclaimerSection}>
+                <Text style={styles.disclaimerBold}>EMERGENCY SITUATIONS:</Text> CareCaller is not an emergency service. In case of medical emergencies, call 911 or your local emergency services immediately.
+              </Text>
+              <Text style={styles.disclaimerSection}>
+                <Text style={styles.disclaimerBold}>USER RESPONSIBILITY:</Text> You are responsible for your own health and safety. Use this service as a supplement to, not a replacement for, professional healthcare and human social connections.
+              </Text>
+              <Text style={styles.disclaimerText}>
+                By proceeding, you confirm you are 18+ years old and agree to use this service responsibly and in accordance with all applicable laws.
+              </Text>
+            </ScrollView>
+            
+            <TouchableOpacity
+              style={styles.checkboxContainer}
+              onPress={() => setDisclaimerAccepted(!disclaimerAccepted)}
+            >
+              <View style={[styles.checkbox, disclaimerAccepted && styles.checkboxChecked]}>
+                {disclaimerAccepted && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <Text style={styles.checkboxLabel}>
+                I have read, understood, and agree to the Terms of Service and Disclaimer above
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[styles.button, (loading || !disclaimerAccepted) && styles.buttonDisabled]}
             onPress={handleRegister}
-            disabled={loading}
+            disabled={loading || !disclaimerAccepted}
           >
             <Text style={styles.buttonText}>
               {loading ? 'Creating Account...' : 'Create Account'}
@@ -345,5 +390,78 @@ const styles = StyleSheet.create({
   linkText: {
     color: '#3498db',
     fontSize: 14,
+  },
+  disclaimerContainer: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  disclaimerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  disclaimerTextContainer: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    maxHeight: 200,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  disclaimerText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#4a5568',
+    textAlign: 'left',
+  },
+  disclaimerSection: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#4a5568',
+    textAlign: 'left',
+    marginBottom: 12,
+  },
+  disclaimerBold: {
+    fontWeight: '600',
+    color: '#2c3e50',
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: 8,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#cbd5e0',
+    backgroundColor: 'white',
+    marginRight: 12,
+    marginTop: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#4299e1',
+    borderColor: '#4299e1',
+  },
+  checkmark: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#4a5568',
   },
 });
