@@ -5,25 +5,32 @@ import { ScheduledCall, CallHistory } from '../types';
 
 export class CallTriggerService {
   static async setupNotifications(): Promise<void> {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    
-    if (finalStatus !== 'granted') {
-      throw new Error('Failed to get push token for push notification!');
-    }
+    try {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      
+      if (finalStatus !== 'granted') {
+        console.warn('Notification permissions not granted. Local notifications may not work.');
+        return;
+      }
 
-    await Notifications.setNotificationChannelAsync('call-reminders', {
-      name: 'Call Reminders',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
-      sound: 'default',
-    });
+      await Notifications.setNotificationChannelAsync('call-reminders', {
+        name: 'Call Reminders',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+        sound: 'default',
+      });
+
+      console.log('Local notifications setup completed successfully');
+    } catch (error) {
+      console.warn('Notification setup warning (this is expected in Expo Go SDK 53):', error);
+    }
   }
 
   static async scheduleCallNotification(scheduledCall: ScheduledCall): Promise<string> {
