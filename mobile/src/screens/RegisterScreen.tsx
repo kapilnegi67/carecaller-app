@@ -31,23 +31,72 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
   const [loading, setLoading] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register } = useAuth();
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateAge = (dateOfBirth: string) => {
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      return age - 1 >= 18;
+    }
+    return age >= 18;
+  };
+
+  const validatePassword = (password: string) => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    return {
+      isValid: password.length >= minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar,
+      errors: [
+        ...(password.length < minLength ? [`Password must be at least ${minLength} characters long`] : []),
+        ...(!hasUpperCase ? ['Password must contain at least one uppercase letter'] : []),
+        ...(!hasLowerCase ? ['Password must contain at least one lowercase letter'] : []),
+        ...(!hasNumbers ? ['Password must contain at least one number'] : []),
+        ...(!hasSpecialChar ? ['Password must contain at least one special character'] : []),
+      ]
+    };
+  };
+
   const handleRegister = async () => {
-    const { email, password, confirmPassword, firstName, lastName, phone } = formData;
+    const { email, password, confirmPassword, firstName, lastName, phone, dateOfBirth } = formData;
 
     if (!email || !password || !firstName || !lastName) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+    if (!validateEmail(email)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address');
       return;
     }
 
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+    if (!validateAge(dateOfBirth)) {
+      Alert.alert('Age Requirement', 'You must be at least 18 years old to register');
+      return;
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      Alert.alert('Password Requirements', passwordValidation.errors.join('\n'));
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
       return;
     }
 
@@ -186,23 +235,39 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
             </View>
           </Modal>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Password *"
-            value={formData.password}
-            onChangeText={(value) => updateFormData('password', value)}
-            secureTextEntry
-            autoCapitalize="none"
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Password *"
+              value={formData.password}
+              onChangeText={(value) => updateFormData('password', value)}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity
+              style={styles.eyeButton}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+            </TouchableOpacity>
+          </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm Password *"
-            value={formData.confirmPassword}
-            onChangeText={(value) => updateFormData('confirmPassword', value)}
-            secureTextEntry
-            autoCapitalize="none"
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Confirm Password *"
+              value={formData.confirmPassword}
+              onChangeText={(value) => updateFormData('confirmPassword', value)}
+              secureTextEntry={!showConfirmPassword}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity
+              style={styles.eyeButton}
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              <Text style={styles.eyeIcon}>{showConfirmPassword ? '👁️' : '👁️‍🗨️'}</Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.disclaimerContainer}>
             <Text style={styles.disclaimerTitle}>Terms of Service & Disclaimer</Text>
@@ -463,5 +528,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: '#4a5568',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e1e8ed',
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 16,
+    fontSize: 16,
+  },
+  eyeButton: {
+    padding: 16,
+    paddingLeft: 8,
+  },
+  eyeIcon: {
+    fontSize: 18,
   },
 });
