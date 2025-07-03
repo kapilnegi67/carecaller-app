@@ -15,6 +15,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   markProfileComplete: () => void;
   deleteAccount: () => Promise<void>;
+  checkIsAdmin: (email: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -123,6 +124,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await sendPasswordResetEmail(auth, email);
   };
 
+  const checkIsAdmin = async (email: string): Promise<boolean> => {
+    try {
+      const agentsQuery = query(collection(db, 'agents'), where('email', '==', email));
+      const agentsSnapshot = await getDocs(agentsQuery);
+      return !agentsSnapshot.empty && agentsSnapshot.docs[0].data().role === 'admin';
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      return false;
+    }
+  };
+
   const deleteAccount = async () => {
     if (!currentUser) {
       throw new Error('No user is currently logged in');
@@ -175,6 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     resetPassword,
     markProfileComplete,
     deleteAccount,
+    checkIsAdmin,
   };
 
   return (

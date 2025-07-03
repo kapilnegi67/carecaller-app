@@ -212,6 +212,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
             placeholder="Phone Number"
           />
 
+          <Text style={styles.inputLabel}>Date of Birth *</Text>
           {errors.dateOfBirth ? (
             <Text style={styles.errorText}>{errors.dateOfBirth}</Text>
           ) : null}
@@ -556,5 +557,12 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: '#e74c3c',
     borderWidth: 2,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 8,
+    marginTop: 4,
   },
 });

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import DatePicker from 'react-native-date-picker';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface DatePickerComponentProps {
   value: string; // YYYY-MM-DD format
@@ -15,43 +15,56 @@ export const DatePickerComponent: React.FC<DatePickerComponentProps> = ({
   placeholder = 'Select Date of Birth',
   error
 }) => {
-  const [open, setOpen] = useState(false);
-  const [date, setDate] = useState(value ? new Date(value) : new Date());
+  const [show, setShow] = useState(false);
+  
+  const getDateFromValue = () => {
+    if (value && value !== '') {
+      const parsedDate = new Date(value);
+      return !isNaN(parsedDate.getTime()) ? parsedDate : new Date();
+    }
+    return new Date();
+  };
 
   const formatDateForDisplay = (dateString: string) => {
-    if (!dateString) return placeholder;
+    if (!dateString || dateString === '') return placeholder;
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return placeholder;
     return date.toLocaleDateString();
   };
 
-  const handleConfirm = (selectedDate: Date) => {
-    setOpen(false);
-    setDate(selectedDate);
-    onDateChange(selectedDate.toISOString().split('T')[0]);
+  const onChange = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || getDateFromValue();
+    setShow(Platform.OS === 'ios');
+    onDateChange(currentDate.toISOString().split('T')[0]);
+  };
+
+  const showDatepicker = () => {
+    setShow(true);
   };
 
   return (
     <View>
       <TouchableOpacity
         style={[styles.dateButton, error && styles.dateButtonError]}
-        onPress={() => setOpen(true)}
+        onPress={showDatepicker}
       >
         <Text style={styles.dateButtonText}>
           {formatDateForDisplay(value)}
         </Text>
       </TouchableOpacity>
       
-      <DatePicker
-        modal
-        open={open}
-        date={date}
-        mode="date"
-        maximumDate={new Date()}
-        minimumDate={new Date(1900, 0, 1)}
-        onConfirm={handleConfirm}
-        onCancel={() => setOpen(false)}
-        title="Select Date of Birth"
-      />
+      {show && (
+        <DateTimePicker
+          testID="dateTimePicker"
+          value={getDateFromValue()}
+          mode="date"
+          is24Hour={true}
+          display="default"
+          onChange={onChange}
+          maximumDate={new Date()}
+          minimumDate={new Date(1900, 0, 1)}
+        />
+      )}
     </View>
   );
 };

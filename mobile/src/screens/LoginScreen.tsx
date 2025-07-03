@@ -24,7 +24,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [resetLoading, setResetLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
-  const { login, resetPassword } = useAuth();
+  const { login, resetPassword, checkIsAdmin } = useAuth();
 
   const handleLogin = async () => {
     setLoginError('');
@@ -58,6 +58,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
     setResetLoading(true);
     try {
+      const isAdmin = await checkIsAdmin(email);
+      if (isAdmin) {
+        Alert.alert('Access Denied', 'Admin accounts cannot reset passwords through the mobile app. Please use the web dashboard.');
+        return;
+      }
+
       await resetPassword(email);
       Alert.alert(
         'Password Reset Sent',
