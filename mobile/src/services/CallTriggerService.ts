@@ -8,12 +8,12 @@ export class CallTriggerService {
     try {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
-      
+
       if (existingStatus !== 'granted') {
         const { status } = await Notifications.requestPermissionsAsync();
         finalStatus = status;
       }
-      
+
       if (finalStatus !== 'granted') {
         console.warn('Notification permissions not granted. Local notifications may not work.');
         return;
@@ -36,7 +36,7 @@ export class CallTriggerService {
   static async scheduleCallNotification(scheduledCall: ScheduledCall): Promise<string> {
     const scheduledTime = new Date(scheduledCall.scheduledTime);
     const now = new Date();
-    
+
     if (scheduledTime <= now) {
       throw new Error('Cannot schedule notification for past time');
     }
@@ -71,7 +71,7 @@ export class CallTriggerService {
   ): () => void {
     const subscription = Notifications.addNotificationReceivedListener(async (notification) => {
       const { scheduledCallId, callType, userId } = notification.request.content.data || {};
-      
+
       if (scheduledCallId && callType && userId) {
         try {
           const scheduledCallsQuery = query(
@@ -79,7 +79,7 @@ export class CallTriggerService {
             where('id', '==', scheduledCallId)
           );
           const scheduledCallsSnapshot = await getDocs(scheduledCallsQuery);
-          
+
           if (!scheduledCallsSnapshot.empty) {
             const scheduledCallDoc = scheduledCallsSnapshot.docs[0];
             const scheduledCall = {
@@ -94,12 +94,12 @@ export class CallTriggerService {
               where('id', '==', userId)
             );
             const usersSnapshot = await getDocs(usersQuery);
-            
+
             if (!usersSnapshot.empty) {
               const userDoc = usersSnapshot.docs[0];
               const userData = userDoc.data();
               const userName = `${userData.firstName} ${userData.lastName}`;
-              
+
               await updateDoc(doc(db, 'scheduledCalls', scheduledCall.id), {
                 status: 'in-progress',
                 startTime: new Date(),
@@ -116,7 +116,7 @@ export class CallTriggerService {
 
     const responseSubscription = Notifications.addNotificationResponseReceivedListener(async (response) => {
       const { scheduledCallId, callType, userId } = response.notification.request.content.data || {};
-      
+
       if (scheduledCallId && callType && userId) {
         try {
           const scheduledCallsQuery = query(
@@ -124,7 +124,7 @@ export class CallTriggerService {
             where('id', '==', scheduledCallId)
           );
           const scheduledCallsSnapshot = await getDocs(scheduledCallsQuery);
-          
+
           if (!scheduledCallsSnapshot.empty) {
             const scheduledCallDoc = scheduledCallsSnapshot.docs[0];
             const scheduledCall = {
@@ -139,12 +139,12 @@ export class CallTriggerService {
               where('id', '==', userId)
             );
             const usersSnapshot = await getDocs(usersQuery);
-            
+
             if (!usersSnapshot.empty) {
               const userDoc = usersSnapshot.docs[0];
               const userData = userDoc.data();
               const userName = `${userData.firstName} ${userData.lastName}`;
-              
+
               await updateDoc(doc(db, 'scheduledCalls', scheduledCall.id), {
                 status: 'in-progress',
                 startTime: new Date(),
@@ -209,7 +209,7 @@ export class CallTriggerService {
         where('scheduledTime', '>', now),
         where('status', '==', 'scheduled')
       );
-      
+
       const snapshot = await getDocs(upcomingCallsQuery);
       return snapshot.docs.map(doc => ({
         id: doc.id,
