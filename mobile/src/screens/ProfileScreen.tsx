@@ -7,9 +7,9 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  Platform,
+  Modal,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { Calendar } from 'react-native-calendars';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../../firebase.config';
@@ -20,7 +20,7 @@ export const ProfileScreen: React.FC = () => {
     firstName: '',
     lastName: '',
     phone: '',
-    dateOfBirth: new Date(),
+    dateOfBirth: new Date().toISOString().split('T')[0], // Store as YYYY-MM-DD string
     emergencyContact: {
       name: '',
       phone: '',
@@ -28,7 +28,7 @@ export const ProfileScreen: React.FC = () => {
     },
   });
   const [loading, setLoading] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
     if (userProfile) {
@@ -36,7 +36,7 @@ export const ProfileScreen: React.FC = () => {
         firstName: userProfile.firstName || '',
         lastName: userProfile.lastName || '',
         phone: userProfile.phone || '',
-        dateOfBirth: userProfile.dateOfBirth ? new Date(userProfile.dateOfBirth) : new Date(),
+        dateOfBirth: userProfile.dateOfBirth || new Date().toISOString().split('T')[0],
         emergencyContact: userProfile.emergencyContact || {
           name: '',
           phone: '',
@@ -90,11 +90,15 @@ export const ProfileScreen: React.FC = () => {
     }
   };
 
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setFormData(prev => ({ ...prev, dateOfBirth: selectedDate }));
-    }
+  const onDateSelect = (day: any) => {
+    setFormData(prev => ({ ...prev, dateOfBirth: day.dateString }));
+    setShowCalendar(false);
+  };
+
+  const formatDateForDisplay = (dateString: string) => {
+    if (!dateString) return 'Select Date of Birth';
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
   };
 
   return (
@@ -132,22 +136,57 @@ export const ProfileScreen: React.FC = () => {
 
         <TouchableOpacity
           style={styles.dateButton}
-          onPress={() => setShowDatePicker(true)}
+          onPress={() => setShowCalendar(true)}
         >
           <Text style={styles.dateButtonText}>
-            Date of Birth: {formData.dateOfBirth.toLocaleDateString()}
+            Date of Birth: {formatDateForDisplay(formData.dateOfBirth)}
           </Text>
         </TouchableOpacity>
 
-        {showDatePicker && (
-          <DateTimePicker
-            value={formData.dateOfBirth}
-            mode="date"
-            display="default"
-            onChange={onDateChange}
-            maximumDate={new Date()}
-          />
-        )}
+        <Modal
+          visible={showCalendar}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setShowCalendar(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.calendarContainer}>
+              <View style={styles.calendarHeader}>
+                <Text style={styles.calendarTitle}>Select Date of Birth</Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setShowCalendar(false)}
+                >
+                  <Text style={styles.closeButtonText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              <Calendar
+                onDayPress={onDateSelect}
+                markedDates={{
+                  [formData.dateOfBirth]: {
+                    selected: true,
+                    selectedColor: '#3498db',
+                    selectedTextColor: 'white',
+                  },
+                }}
+                maxDate={new Date().toISOString().split('T')[0]}
+                theme={{
+                  backgroundColor: '#ffffff',
+                  calendarBackground: '#ffffff',
+                  textSectionTitleColor: '#b6c1cd',
+                  selectedDayBackgroundColor: '#3498db',
+                  selectedDayTextColor: '#ffffff',
+                  todayTextColor: '#3498db',
+                  dayTextColor: '#2d4150',
+                  textDisabledColor: '#d9e1e8',
+                  arrowColor: '#3498db',
+                  monthTextColor: '#2d4150',
+                  indicatorColor: '#3498db',
+                }}
+              />
+            </View>
+          </View>
+        </Modal>
       </View>
 
       <View style={styles.section}>
@@ -249,6 +288,51 @@ const styles = StyleSheet.create({
   dateButtonText: {
     fontSize: 16,
     color: '#2c3e50',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  calendarContainer: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    margin: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  calendarTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2c3e50',
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f7fafc',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 18,
+    color: '#4a5568',
+    fontWeight: '600',
   },
   button: {
     backgroundColor: '#3498db',

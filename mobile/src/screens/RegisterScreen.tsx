@@ -9,8 +9,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Modal,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { Calendar } from 'react-native-calendars';
 import { useAuth } from '../contexts/AuthContext';
 
 interface RegisterScreenProps {
@@ -25,10 +26,10 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
     firstName: '',
     lastName: '',
     phone: '',
-    dateOfBirth: new Date(),
+    dateOfBirth: new Date().toISOString().split('T')[0], // Store as YYYY-MM-DD string
   });
   const [loading, setLoading] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const { register } = useAuth();
 
   const handleRegister = async () => {
@@ -55,7 +56,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
         firstName,
         lastName,
         phone: phone || undefined,
-        dateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString().split('T')[0] : undefined,
+        dateOfBirth: formData.dateOfBirth || undefined,
       });
     } catch (error: any) {
       Alert.alert('Registration Failed', error.message);
@@ -64,15 +65,19 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
     }
   };
 
-  const updateFormData = (field: string, value: string | Date) => {
+  const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setFormData(prev => ({ ...prev, dateOfBirth: selectedDate }));
-    }
+  const onDateSelect = (day: any) => {
+    setFormData(prev => ({ ...prev, dateOfBirth: day.dateString }));
+    setShowCalendar(false);
+  };
+
+  const formatDateForDisplay = (dateString: string) => {
+    if (!dateString) return 'Select Date of Birth';
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
   };
 
   return (
@@ -123,22 +128,57 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
 
           <TouchableOpacity
             style={styles.dateButton}
-            onPress={() => setShowDatePicker(true)}
+            onPress={() => setShowCalendar(true)}
           >
             <Text style={styles.dateButtonText}>
-              Date of Birth: {formData.dateOfBirth.toLocaleDateString()}
+              {formatDateForDisplay(formData.dateOfBirth)}
             </Text>
           </TouchableOpacity>
 
-          {showDatePicker && (
-            <DateTimePicker
-              value={formData.dateOfBirth}
-              mode="date"
-              display="default"
-              onChange={onDateChange}
-              maximumDate={new Date()}
-            />
-          )}
+          <Modal
+            visible={showCalendar}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={() => setShowCalendar(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.calendarContainer}>
+                <View style={styles.calendarHeader}>
+                  <Text style={styles.calendarTitle}>Select Date of Birth</Text>
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => setShowCalendar(false)}
+                  >
+                    <Text style={styles.closeButtonText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+                <Calendar
+                  onDayPress={onDateSelect}
+                  markedDates={{
+                    [formData.dateOfBirth]: {
+                      selected: true,
+                      selectedColor: '#4299e1',
+                      selectedTextColor: 'white',
+                    },
+                  }}
+                  maxDate={new Date().toISOString().split('T')[0]}
+                  theme={{
+                    backgroundColor: '#ffffff',
+                    calendarBackground: '#ffffff',
+                    textSectionTitleColor: '#b6c1cd',
+                    selectedDayBackgroundColor: '#4299e1',
+                    selectedDayTextColor: '#ffffff',
+                    todayTextColor: '#4299e1',
+                    dayTextColor: '#2d4150',
+                    textDisabledColor: '#d9e1e8',
+                    arrowColor: '#4299e1',
+                    monthTextColor: '#2d4150',
+                    indicatorColor: '#4299e1',
+                  }}
+                />
+              </View>
+            </View>
+          </Modal>
 
           <TextInput
             style={styles.input}
@@ -220,15 +260,68 @@ const styles = StyleSheet.create({
   },
   dateButton: {
     backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: 12,
+    padding: 18,
     marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#e1e8ed',
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   dateButtonText: {
     fontSize: 16,
-    color: '#2c3e50',
+    color: '#4a5568',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  calendarContainer: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    margin: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  calendarTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2c5282',
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f7fafc',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 18,
+    color: '#4a5568',
+    fontWeight: '600',
   },
   button: {
     backgroundColor: '#27ae60',
