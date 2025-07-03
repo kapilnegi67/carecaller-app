@@ -35,8 +35,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      
       if (user) {
         const adminDoc = await getDoc(doc(db, 'agents', user.uid));
         if (adminDoc.exists() && adminDoc.data().role === 'admin') {
@@ -48,6 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
+        setCurrentUser(user);
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists()) {
           const userData = userDoc.data() as User;
@@ -60,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsNewUser(true);
         }
       } else {
+        setCurrentUser(null);
         setUserProfile(null);
         setIsNewUser(false);
       }
@@ -71,12 +71,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    
-    const adminDoc = await getDoc(doc(db, 'agents', userCredential.user.uid));
-    if (adminDoc.exists() && adminDoc.data().role === 'admin') {
-      await signOut(auth);
-      throw new Error('Admin accounts cannot access the mobile app. Please use the web dashboard.');
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      const adminDoc = await getDoc(doc(db, 'agents', userCredential.user.uid));
+      if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+        await signOut(auth);
+        throw new Error('Admin accounts cannot access the mobile app. Please use the web dashboard.');
+      }
+    } catch (error: any) {
+      if (error.message.includes('Admin accounts cannot access')) {
+        throw error;
+      }
+      throw error;
     }
   };
 
