@@ -11,9 +11,9 @@ import {
   ScrollView,
   Modal,
 } from 'react-native';
-import { Calendar } from 'react-native-calendars';
-import MonthPicker from 'react-native-month-year-picker';
 import { useAuth } from '../contexts/AuthContext';
+import { DatePickerComponent } from '../components/DatePicker';
+import { PhoneInput } from '../components/PhoneInput';
 
 interface RegisterScreenProps {
   navigation: any;
@@ -30,8 +30,6 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
     dateOfBirth: new Date().toISOString().split('T')[0], // Store as YYYY-MM-DD string
   });
   const [loading, setLoading] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -158,23 +156,6 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
     }
   };
 
-  const onDateSelect = (day: any) => {
-    setFormData(prev => ({ ...prev, dateOfBirth: day.dateString }));
-    setShowCalendar(false);
-  };
-
-  const onMonthYearChange = (event: any, newDate: Date | undefined) => {
-    setShowMonthPicker(false);
-    if (newDate) {
-      setFormData(prev => ({ ...prev, dateOfBirth: newDate.toISOString().split('T')[0] }));
-    }
-  };
-
-  const formatDateForDisplay = (dateString: string) => {
-    if (!dateString) return 'Select Date of Birth';
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
-  };
 
   return (
     <KeyboardAvoidingView
@@ -221,91 +202,20 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
             autoCorrect={false}
           />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Phone Number"
+          <PhoneInput
             value={formData.phone}
             onChangeText={(value) => updateFormData('phone', value)}
-            keyboardType="phone-pad"
+            placeholder="Phone Number"
           />
 
           {errors.dateOfBirth ? (
             <Text style={styles.errorText}>{errors.dateOfBirth}</Text>
           ) : null}
-          <View style={styles.datePickerContainer}>
-            <TouchableOpacity
-              style={[styles.dateButton, errors.dateOfBirth && styles.inputError]}
-              onPress={() => setShowMonthPicker(true)}
-            >
-              <Text style={styles.dateButtonText}>
-                Month/Year: {formatDateForDisplay(formData.dateOfBirth)}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.dateButton, errors.dateOfBirth && styles.inputError]}
-              onPress={() => setShowCalendar(true)}
-            >
-              <Text style={styles.dateButtonText}>
-                Exact Date: {formatDateForDisplay(formData.dateOfBirth)}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {showMonthPicker && (
-            <MonthPicker
-              onChange={onMonthYearChange}
-              value={new Date(formData.dateOfBirth)}
-              minimumDate={new Date(1900, 0)}
-              maximumDate={new Date()}
-              locale="en"
-            />
-          )}
-
-          <Modal
-            visible={showCalendar}
-            animationType="slide"
-            transparent={true}
-            onRequestClose={() => setShowCalendar(false)}
-          >
-            <View style={styles.modalOverlay}>
-              <View style={styles.calendarContainer}>
-                <View style={styles.calendarHeader}>
-                  <Text style={styles.calendarTitle}>Select Date of Birth</Text>
-                  <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => setShowCalendar(false)}
-                  >
-                    <Text style={styles.closeButtonText}>✕</Text>
-                  </TouchableOpacity>
-                </View>
-                <Calendar
-                  onDayPress={onDateSelect}
-                  markedDates={{
-                    [formData.dateOfBirth]: {
-                      selected: true,
-                      selectedColor: '#4299e1',
-                      selectedTextColor: 'white',
-                    },
-                  }}
-                  maxDate={new Date().toISOString().split('T')[0]}
-                  theme={{
-                    backgroundColor: '#ffffff',
-                    calendarBackground: '#ffffff',
-                    textSectionTitleColor: '#b6c1cd',
-                    selectedDayBackgroundColor: '#4299e1',
-                    selectedDayTextColor: '#ffffff',
-                    todayTextColor: '#4299e1',
-                    dayTextColor: '#2d4150',
-                    textDisabledColor: '#d9e1e8',
-                    arrowColor: '#4299e1',
-                    monthTextColor: '#2d4150',
-                    indicatorColor: '#4299e1',
-                  }}
-                />
-              </View>
-            </View>
-          </Modal>
+          <DatePickerComponent
+            value={formData.dateOfBirth}
+            onDateChange={(date) => updateFormData('dateOfBirth', date)}
+            error={errors.dateOfBirth}
+          />
 
           {errors.password ? (
             <Text style={styles.errorText}>{errors.password}</Text>
@@ -349,7 +259,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
 
           <View style={styles.disclaimerContainer}>
             <Text style={styles.disclaimerTitle}>Terms of Service & Disclaimer</Text>
-            <ScrollView style={styles.disclaimerTextContainer}>
+            <ScrollView style={styles.disclaimerTextContainer} nestedScrollEnabled={true}>
               <Text style={styles.disclaimerText}>
                 By creating an account, you acknowledge and agree to the following:
               </Text>

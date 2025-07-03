@@ -23,11 +23,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState('');
   const { login, resetPassword } = useAuth();
 
   const handleLogin = async () => {
+    setLoginError('');
+    
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      setLoginError('Please fill in all fields');
       return;
     }
 
@@ -35,7 +38,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     try {
       await login(email, password);
     } catch (error: any) {
-      Alert.alert('Login Failed', error.message);
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        setLoginError('Invalid Credentials');
+      } else {
+        setLoginError(error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -104,6 +111,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               />
             </TouchableOpacity>
           </View>
+
+          {loginError ? (
+            <Text style={styles.errorText}>{loginError}</Text>
+          ) : null}
 
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
@@ -257,5 +268,17 @@ const styles = StyleSheet.create({
     color: '#4299e1',
     fontSize: 14,
     fontWeight: '500',
+  },
+  errorText: {
+    color: '#e53e3e',
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 16,
+    textAlign: 'center',
+    backgroundColor: '#fed7d7',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#feb2b2',
   },
 });

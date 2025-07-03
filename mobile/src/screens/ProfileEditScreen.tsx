@@ -9,11 +9,11 @@ import {
   ScrollView,
   Modal,
 } from 'react-native';
-import { Calendar } from 'react-native-calendars';
-import MonthPicker from 'react-native-month-year-picker';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../../firebase.config';
+import { DatePickerComponent } from '../components/DatePicker';
+import { PhoneInput } from '../components/PhoneInput';
 
 export const ProfileEditScreen: React.FC = () => {
   const { userProfile, markProfileComplete, currentUser } = useAuth();
@@ -29,8 +29,6 @@ export const ProfileEditScreen: React.FC = () => {
     },
   });
   const [loading, setLoading] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [showMonthPicker, setShowMonthPicker] = useState(false);
 
   useEffect(() => {
     if (userProfile) {
@@ -82,23 +80,6 @@ export const ProfileEditScreen: React.FC = () => {
     }
   };
 
-  const onDateSelect = (day: any) => {
-    setFormData(prev => ({ ...prev, dateOfBirth: day.dateString }));
-    setShowCalendar(false);
-  };
-
-  const onMonthYearChange = (event: any, newDate: Date | undefined) => {
-    setShowMonthPicker(false);
-    if (newDate) {
-      setFormData(prev => ({ ...prev, dateOfBirth: newDate.toISOString().split('T')[0] }));
-    }
-  };
-
-  const formatDateForDisplay = (dateString: string) => {
-    if (!dateString) return 'Select Date of Birth';
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
-  };
 
   return (
     <ScrollView style={styles.container}>
@@ -126,88 +107,17 @@ export const ProfileEditScreen: React.FC = () => {
           autoCapitalize="words"
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Phone Number"
+        <PhoneInput
           value={formData.phone}
           onChangeText={(value) => updateFormData('phone', value)}
-          keyboardType="phone-pad"
+          placeholder="Phone Number"
         />
 
-        <View style={styles.datePickerContainer}>
-          <TouchableOpacity
-            style={styles.dateButton}
-            onPress={() => setShowMonthPicker(true)}
-          >
-            <Text style={styles.dateButtonText}>
-              Month/Year: {formatDateForDisplay(formData.dateOfBirth)}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.dateButton}
-            onPress={() => setShowCalendar(true)}
-          >
-            <Text style={styles.dateButtonText}>
-              Exact Date: {formatDateForDisplay(formData.dateOfBirth)}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {showMonthPicker && (
-          <MonthPicker
-            onChange={onMonthYearChange}
-            value={new Date(formData.dateOfBirth)}
-            minimumDate={new Date(1900, 0)}
-            maximumDate={new Date()}
-            locale="en"
-          />
-        )}
-
-        <Modal
-          visible={showCalendar}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setShowCalendar(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.calendarContainer}>
-              <View style={styles.calendarHeader}>
-                <Text style={styles.calendarTitle}>Select Date of Birth</Text>
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => setShowCalendar(false)}
-                >
-                  <Text style={styles.closeButtonText}>✕</Text>
-                </TouchableOpacity>
-              </View>
-              <Calendar
-                onDayPress={onDateSelect}
-                markedDates={{
-                  [formData.dateOfBirth]: {
-                    selected: true,
-                    selectedColor: '#3498db',
-                    selectedTextColor: 'white',
-                  },
-                }}
-                maxDate={new Date().toISOString().split('T')[0]}
-                theme={{
-                  backgroundColor: '#ffffff',
-                  calendarBackground: '#ffffff',
-                  textSectionTitleColor: '#b6c1cd',
-                  selectedDayBackgroundColor: '#3498db',
-                  selectedDayTextColor: '#ffffff',
-                  todayTextColor: '#3498db',
-                  dayTextColor: '#2d4150',
-                  textDisabledColor: '#d9e1e8',
-                  arrowColor: '#3498db',
-                  monthTextColor: '#2d4150',
-                  indicatorColor: '#3498db',
-                }}
-              />
-            </View>
-          </View>
-        </Modal>
+        <DatePickerComponent
+          value={formData.dateOfBirth}
+          onDateChange={(date) => updateFormData('dateOfBirth', date)}
+          placeholder="Select Date of Birth"
+        />
       </View>
 
       <View style={styles.section}>
@@ -221,12 +131,10 @@ export const ProfileEditScreen: React.FC = () => {
           autoCapitalize="words"
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Contact Phone"
+        <PhoneInput
           value={formData.emergencyContact.phone}
           onChangeText={(value) => updateFormData('emergencyContact.phone', value)}
-          keyboardType="phone-pad"
+          placeholder="Contact Phone"
         />
 
         <TextInput
