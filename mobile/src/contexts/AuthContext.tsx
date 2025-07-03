@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, deleteUser } from 'firebase/auth';
-import { doc, getDoc, setDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase.config';
 import { User } from '../types';
 
@@ -16,6 +16,7 @@ interface AuthContextType {
   markProfileComplete: () => void;
   deleteAccount: () => Promise<void>;
   checkIsAdmin: (email: string) => Promise<boolean>;
+  updateUserProfile: (userData: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -135,6 +136,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateUserProfile = async (userData: Partial<User>) => {
+    if (!currentUser || !userProfile) {
+      throw new Error('No user is currently logged in');
+    }
+
+    const updatedProfile = {
+      ...userProfile,
+      ...userData,
+      updatedAt: new Date(),
+    };
+
+    await updateDoc(doc(db, 'users', userProfile.id), updatedProfile);
+    setUserProfile(updatedProfile);
+  };
+
   const deleteAccount = async () => {
     if (!currentUser) {
       throw new Error('No user is currently logged in');
@@ -188,6 +204,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     markProfileComplete,
     deleteAccount,
     checkIsAdmin,
+    updateUserProfile,
   };
 
   return (

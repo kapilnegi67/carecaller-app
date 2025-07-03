@@ -16,7 +16,7 @@ import { DatePickerComponent } from '../components/DatePicker';
 import { PhoneInput } from '../components/PhoneInput';
 
 export const ProfileScreen: React.FC = () => {
-  const { userProfile, logout, deleteAccount } = useAuth();
+  const { userProfile, logout, deleteAccount, updateUserProfile } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -51,11 +51,7 @@ export const ProfileScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      const userRef = doc(db, 'users', userProfile.id);
-      await updateDoc(userRef, {
-        ...formData,
-        updatedAt: new Date(),
-      });
+      await updateUserProfile(formData);
       Alert.alert('Success', 'Profile updated successfully');
     } catch (error: any) {
       Alert.alert('Error', 'Failed to update profile: ' + error.message);
