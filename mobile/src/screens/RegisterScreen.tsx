@@ -33,6 +33,13 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    dateOfBirth: '',
+    general: '',
+  });
   const { register } = useAuth();
 
   const validateEmail = (email: string) => {
@@ -74,34 +81,56 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
   const handleRegister = async () => {
     const { email, password, confirmPassword, firstName, lastName, phone, dateOfBirth } = formData;
 
+    setErrors({
+      email: '',
+      password: '',
+      confirmPassword: '',
+      dateOfBirth: '',
+      general: '',
+    });
+
+    let hasErrors = false;
+    const newErrors = {
+      email: '',
+      password: '',
+      confirmPassword: '',
+      dateOfBirth: '',
+      general: '',
+    };
+
     if (!email || !password || !firstName || !lastName) {
-      Alert.alert('Error', 'Please fill in all required fields');
-      return;
+      newErrors.general = 'Please fill in all required fields';
+      hasErrors = true;
     }
 
-    if (!validateEmail(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address');
-      return;
+    if (email && !validateEmail(email)) {
+      newErrors.email = 'Please enter a valid email address';
+      hasErrors = true;
     }
 
     if (!validateAge(dateOfBirth)) {
-      Alert.alert('Age Requirement', 'You must be at least 18 years old to register');
-      return;
+      newErrors.dateOfBirth = 'You must be at least 18 years old to register';
+      hasErrors = true;
     }
 
     const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
-      Alert.alert('Password Requirements', passwordValidation.errors.join('\n'));
-      return;
+    if (password && !passwordValidation.isValid) {
+      newErrors.password = passwordValidation.errors.join('\n');
+      hasErrors = true;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
+    if (password && confirmPassword && password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+      hasErrors = true;
     }
 
     if (!disclaimerAccepted) {
-      Alert.alert('Error', 'Please read and accept the Terms of Service and Disclaimer to continue');
+      newErrors.general = 'Please read and accept the Terms of Service and Disclaimer to continue';
+      hasErrors = true;
+    }
+
+    if (hasErrors) {
+      setErrors(newErrors);
       return;
     }
 
@@ -114,7 +143,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
         dateOfBirth: formData.dateOfBirth || undefined,
       });
     } catch (error: any) {
-      Alert.alert('Registration Failed', error.message);
+      setErrors(prev => ({ ...prev, general: error.message }));
     } finally {
       setLoading(false);
     }
@@ -122,6 +151,9 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
 
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field as keyof typeof errors]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   const onDateSelect = (day: any) => {
@@ -147,6 +179,10 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
         </View>
 
         <View style={styles.form}>
+          {errors.general ? (
+            <Text style={styles.errorText}>{errors.general}</Text>
+          ) : null}
+
           <TextInput
             style={styles.input}
             placeholder="First Name *"
@@ -163,8 +199,11 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
             autoCapitalize="words"
           />
 
+          {errors.email ? (
+            <Text style={styles.errorText}>{errors.email}</Text>
+          ) : null}
           <TextInput
-            style={styles.input}
+            style={[styles.input, errors.email && styles.inputError]}
             placeholder="Email *"
             value={formData.email}
             onChangeText={(value) => updateFormData('email', value)}
@@ -181,8 +220,11 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
             keyboardType="phone-pad"
           />
 
+          {errors.dateOfBirth ? (
+            <Text style={styles.errorText}>{errors.dateOfBirth}</Text>
+          ) : null}
           <TouchableOpacity
-            style={styles.dateButton}
+            style={[styles.dateButton, errors.dateOfBirth && styles.inputError]}
             onPress={() => setShowCalendar(true)}
           >
             <Text style={styles.dateButtonText}>
@@ -235,7 +277,10 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
             </View>
           </Modal>
 
-          <View style={styles.passwordContainer}>
+          {errors.password ? (
+            <Text style={styles.errorText}>{errors.password}</Text>
+          ) : null}
+          <View style={[styles.passwordContainer, errors.password && styles.inputError]}>
             <TextInput
               style={styles.passwordInput}
               placeholder="Password *"
@@ -252,7 +297,10 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.passwordContainer}>
+          {errors.confirmPassword ? (
+            <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+          ) : null}
+          <View style={[styles.passwordContainer, errors.confirmPassword && styles.inputError]}>
             <TextInput
               style={styles.passwordInput}
               placeholder="Confirm Password *"
@@ -549,5 +597,17 @@ const styles = StyleSheet.create({
   },
   eyeIcon: {
     fontSize: 18,
+  },
+  errorText: {
+    color: '#e74c3c',
+    fontSize: 14,
+    marginBottom: 8,
+    marginTop: 4,
+    paddingHorizontal: 4,
+    lineHeight: 18,
+  },
+  inputError: {
+    borderColor: '#e74c3c',
+    borderWidth: 2,
   },
 });
