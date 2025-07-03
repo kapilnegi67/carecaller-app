@@ -143,7 +143,11 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
         dateOfBirth: formData.dateOfBirth || undefined,
       });
     } catch (error: any) {
-      setErrors(prev => ({ ...prev, general: error.message }));
+      if (error.code === 'auth/invalid-email') {
+        setErrors(prev => ({ ...prev, email: 'Invalid Email' }));
+      } else {
+        setErrors(prev => ({ ...prev, general: error.message }));
+      }
     } finally {
       setLoading(false);
     }

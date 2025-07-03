@@ -40,6 +40,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     } catch (error: any) {
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         setLoginError('Invalid Credentials');
+      } else if (error.code === 'auth/invalid-email') {
+        setLoginError('Invalid Email');
       } else {
         setLoginError(error.message);
       }
