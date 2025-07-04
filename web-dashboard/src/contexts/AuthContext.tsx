@@ -32,12 +32,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCurrentUser(user);
       
       if (user) {
-        const agentDoc = await getDoc(doc(db, 'agents', user.uid));
-        if (agentDoc.exists()) {
-          setAgentProfile({
-            ...agentDoc.data(),
-            createdAt: agentDoc.data().createdAt.toDate(),
-          } as Agent);
+        try {
+          const agentDoc = await getDoc(doc(db, 'agents', user.uid));
+          if (agentDoc.exists()) {
+            setAgentProfile({
+              ...agentDoc.data(),
+              createdAt: agentDoc.data().createdAt.toDate(),
+            } as Agent);
+          }
+        } catch (error) {
+          console.error('Error fetching agent profile:', error);
+          setAgentProfile(null);
         }
       } else {
         setAgentProfile(null);
