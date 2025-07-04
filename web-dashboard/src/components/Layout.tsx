@@ -11,7 +11,7 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) => {
-  const { agentProfile, logout } = useAuth();
+  const { adminProfile, logout } = useAuth();
 
   const navigationItems = [
     { id: 'users', label: 'Users', icon: Users },
@@ -33,10 +33,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageCha
               <div className="flex items-center space-x-2">
                 <User className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-700">
-                  {agentProfile?.firstName} {agentProfile?.lastName}
+                  {adminProfile?.firstName} {adminProfile?.lastName}
                 </span>
                 <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                  {agentProfile?.role}
+                  Administrator
                 </span>
               </div>
               
