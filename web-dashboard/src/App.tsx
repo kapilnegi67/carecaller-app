@@ -8,7 +8,7 @@ import { ScheduledCallsPage } from './components/ScheduledCallsPage';
 import { CallHistoryPage } from './components/CallHistoryPage';
 
 const AppContent: React.FC = () => {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, adminProfile, loading } = useAuth();
   const [currentPage, setCurrentPage] = useState('users');
 
   if (loading) {
@@ -22,7 +22,7 @@ const AppContent: React.FC = () => {
     );
   }
 
-  if (!currentUser) {
+  if (!currentUser || !adminProfile) {
     return <LoginForm />;
   }
 
