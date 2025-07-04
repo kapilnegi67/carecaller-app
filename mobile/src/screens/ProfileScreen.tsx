@@ -15,6 +15,18 @@ import { db } from '../../firebase.config';
 import { DatePickerComponent } from '../components/DatePicker';
 import { PhoneInput } from '../components/PhoneInput';
 
+const validateAge = (dateOfBirth: string) => {
+  const today = new Date();
+  const birthDate = new Date(dateOfBirth);
+  const age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    return age - 1 >= 18;
+  }
+  return age >= 18;
+};
+
 export const ProfileScreen: React.FC = () => {
   const { userProfile, logout, deleteAccount, updateUserProfile } = useAuth();
   const [formData, setFormData] = useState({
@@ -48,6 +60,11 @@ export const ProfileScreen: React.FC = () => {
 
   const handleSave = async () => {
     if (!userProfile) return;
+
+    if (!validateAge(formData.dateOfBirth)) {
+      Alert.alert('Invalid Date of Birth', 'You must be at least 18 years old.');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -140,6 +157,7 @@ export const ProfileScreen: React.FC = () => {
           placeholder="Phone Number"
         />
 
+        <Text style={styles.inputLabel}>Date of Birth</Text>
         <DatePickerComponent
           value={formData.dateOfBirth}
           onDateChange={(date) => updateFormData('dateOfBirth', date)}
@@ -239,6 +257,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: '#e1e8ed',
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 8,
+    marginTop: 4,
   },
   datePickerContainer: {
     marginBottom: 12,

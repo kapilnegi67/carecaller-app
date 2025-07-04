@@ -39,6 +39,7 @@ export const DatePickerComponent: React.FC<DatePickerComponentProps> = ({
   };
 
   const showDatepicker = () => {
+    console.log('DatePicker clicked, setting show to true');
     setShow(true);
   };
 
