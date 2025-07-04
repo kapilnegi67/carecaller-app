@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
-import CountryPicker, { Country, CountryCode } from 'react-native-country-picker-modal';
+import React from 'react';
+import { View, TextInput, StyleSheet, Text } from 'react-native';
 
 interface PhoneInputProps {
   value: string;
@@ -15,34 +14,10 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   placeholder = 'Phone Number',
   error
 }) => {
-  const [countryCode, setCountryCode] = useState<CountryCode>('US');
-  const [country, setCountry] = useState<Country | null>(null);
-  const [withCountryNameButton, setWithCountryNameButton] = useState(false);
-  const [withFlag, setWithFlag] = useState(true);
-  const [withEmoji, setWithEmoji] = useState(true);
-  const [withFilter, setWithFilter] = useState(true);
-  const [withAlphaFilter, setWithAlphaFilter] = useState(false);
-  const [withCallingCode, setWithCallingCode] = useState(true);
-
-  const onSelect = (country: Country) => {
-    setCountryCode(country.cca2);
-    setCountry(country);
-  };
-
   return (
     <View style={[styles.container, error && styles.containerError]}>
-      <View style={styles.countryPickerContainer}>
-        <CountryPicker
-          countryCode={countryCode}
-          withFilter={withFilter}
-          withFlag={withFlag}
-          withCountryNameButton={withCountryNameButton}
-          withAlphaFilter={withAlphaFilter}
-          withCallingCode={withCallingCode}
-          withEmoji={withEmoji}
-          onSelect={onSelect}
-          containerButtonStyle={styles.countryButton}
-        />
+      <View style={styles.countryCodeContainer}>
+        <Text style={styles.countryCodeText}>+1</Text>
       </View>
       <TextInput
         style={styles.phoneInput}
@@ -72,16 +47,17 @@ const styles = StyleSheet.create({
   containerError: {
     borderColor: '#e74c3c',
   },
-  countryPickerContainer: {
+  countryCodeContainer: {
     paddingLeft: 15,
     paddingRight: 10,
     justifyContent: 'center',
     borderRightWidth: 1,
     borderRightColor: '#e2e8f0',
   },
-  countryButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
+  countryCodeText: {
+    fontSize: 16,
+    color: '#2c3e50',
+    fontWeight: '500',
   },
   phoneInput: {
     flex: 1,

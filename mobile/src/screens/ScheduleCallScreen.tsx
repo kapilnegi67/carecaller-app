@@ -7,6 +7,7 @@ import {
   Alert,
   ScrollView,
   Platform,
+  TextInput,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
@@ -24,10 +25,22 @@ export const ScheduleCallScreen: React.FC = () => {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [callType, setCallType] = useState<'wellness-check' | 'medication-reminder' | 'social-call'>('wellness-check');
   const [duration, setDuration] = useState(15);
+  const [customDuration, setCustomDuration] = useState('');
+  const [useCustomDuration, setUseCustomDuration] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleScheduleCall = async () => {
     if (!userProfile) return;
+
+    let finalDuration = duration;
+    if (useCustomDuration) {
+      const customDurationNum = parseInt(customDuration);
+      if (!customDuration || isNaN(customDurationNum) || customDurationNum < 1 || customDurationNum > 180) {
+        Alert.alert('Error', 'Please enter a valid duration between 1 and 180 minutes');
+        return;
+      }
+      finalDuration = customDurationNum;
+    }
 
     const scheduledDateTime = new Date(selectedDate);
     scheduledDateTime.setHours(selectedTime.getHours());
@@ -43,7 +56,7 @@ export const ScheduleCallScreen: React.FC = () => {
       const newCall: Omit<ScheduledCall, 'id'> = {
         userId: userProfile.id,
         scheduledTime: scheduledDateTime,
-        duration,
+        duration: finalDuration,
         type: callType,
         status: 'scheduled',
         createdAt: new Date(),
@@ -61,6 +74,8 @@ export const ScheduleCallScreen: React.FC = () => {
       setSelectedTime(new Date());
       setCallType('wellness-check');
       setDuration(15);
+      setCustomDuration('');
+      setUseCustomDuration(false);
     } catch (error: any) {
       Alert.alert('Error', 'Failed to schedule call: ' + error.message);
     } finally {
@@ -149,16 +164,37 @@ export const ScheduleCallScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>Duration (minutes)</Text>
         <View style={styles.pickerContainer}>
           <Picker
-            selectedValue={duration}
-            onValueChange={(itemValue) => setDuration(itemValue)}
+            selectedValue={useCustomDuration ? 'custom' : duration}
+            onValueChange={(itemValue) => {
+              if (itemValue === 'custom') {
+                setUseCustomDuration(true);
+              } else {
+                setUseCustomDuration(false);
+                setDuration(itemValue);
+              }
+            }}
             style={styles.picker}
           >
             <Picker.Item label="15 minutes" value={15} />
             <Picker.Item label="30 minutes" value={30} />
             <Picker.Item label="45 minutes" value={45} />
             <Picker.Item label="60 minutes" value={60} />
+            <Picker.Item label="Custom minutes" value="custom" />
           </Picker>
         </View>
+        
+        {useCustomDuration && (
+          <View style={styles.customInputContainer}>
+            <TextInput
+              style={styles.customInput}
+              placeholder="Enter custom minutes (1-180)"
+              value={customDuration}
+              onChangeText={setCustomDuration}
+              keyboardType="numeric"
+              maxLength={3}
+            />
+          </View>
+        )}
       </View>
 
       <TouchableOpacity
@@ -245,5 +281,18 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  customInputContainer: {
+    marginTop: 12,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e1e8ed',
+  },
+  customInput: {
+    height: 50,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: '#2c3e50',
   },
 });
