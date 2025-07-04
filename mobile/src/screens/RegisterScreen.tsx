@@ -108,10 +108,10 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
       hasErrors = true;
     }
 
-    if (!validateAge(dateOfBirth)) {
-      newErrors.dateOfBirth = 'You must be at least 18 years old to register';
-      hasErrors = true;
-    }
+    // if (!validateAge(dateOfBirth)) {
+    //   newErrors.dateOfBirth = 'You must be at least 18 years old to register';
+    //   hasErrors = true;
+    // }
 
     const passwordValidation = validatePassword(password);
     if (password && !passwordValidation.isValid) {

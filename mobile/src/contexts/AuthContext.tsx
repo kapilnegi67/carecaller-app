@@ -100,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       lastName: userData.lastName || '',
       phone: userData.phone,
       dateOfBirth: userData.dateOfBirth,
-      emergencyContact: userData.emergencyContact,
+      ...(userData.emergencyContact && { emergencyContact: userData.emergencyContact }),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
