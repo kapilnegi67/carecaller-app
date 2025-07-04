@@ -147,7 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updatedAt: new Date(),
     };
 
-    await updateDoc(doc(db, 'users', userProfile.id), updatedProfile);
+    await setDoc(doc(db, 'users', userProfile.id), updatedProfile, { merge: true });
     setUserProfile(updatedProfile);
   };
 
