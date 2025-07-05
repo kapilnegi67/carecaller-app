@@ -266,6 +266,8 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 50,
+    color: '#2c3e50',
+    fontSize: 16,
   },
   button: {
     backgroundColor: '#27ae60',
