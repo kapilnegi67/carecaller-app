@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { collection, query, where, getDocs, updateDoc, doc, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc, addDoc, getDoc, DocumentReference } from 'firebase/firestore';
 import { db } from '../../firebase.config';
 import { ScheduledCall, CallHistory } from '../types';
 
@@ -76,15 +76,9 @@ export class CallTriggerService {
       if (scheduledCallId && callType && userId) {
         try {
           console.log('🔍 Looking for scheduled call:', scheduledCallId);
-          const scheduledCallsQuery = query(
-            collection(db, 'scheduledCalls')
-          );
-          const scheduledCallsSnapshot = await getDocs(scheduledCallsQuery);
-          console.log('🔍 Available scheduled calls:', scheduledCallsSnapshot.docs.map(d => d.id));
-          
-          const scheduledCallDoc = scheduledCallsSnapshot.docs.find(doc => doc.id === scheduledCallId);
+          const scheduledCallDoc = await getDoc(doc(db, 'scheduledCalls', scheduledCallId) as DocumentReference);
 
-          if (scheduledCallDoc) {
+          if (scheduledCallDoc.exists()) {
             const scheduledCall = {
               id: scheduledCallDoc.id,
               ...scheduledCallDoc.data(),
@@ -94,15 +88,9 @@ export class CallTriggerService {
 
             console.log('📞 Found scheduled call:', scheduledCall);
 
-            const usersQuery = query(
-              collection(db, 'users')
-            );
-            const usersSnapshot = await getDocs(usersQuery);
-            console.log('🔍 Available users:', usersSnapshot.docs.map(d => d.id));
-            
-            const userDoc = usersSnapshot.docs.find(doc => doc.id === userId);
+            const userDoc = await getDoc(doc(db, 'users', userId) as DocumentReference);
 
-            if (userDoc) {
+            if (userDoc.exists()) {
               const userData = userDoc.data();
               const userName = `${userData.firstName} ${userData.lastName}`;
 
@@ -134,15 +122,9 @@ export class CallTriggerService {
       if (scheduledCallId && callType && userId) {
         try {
           console.log('🔍 Response: Looking for scheduled call:', scheduledCallId);
-          const scheduledCallsQuery = query(
-            collection(db, 'scheduledCalls')
-          );
-          const scheduledCallsSnapshot = await getDocs(scheduledCallsQuery);
-          console.log('🔍 Response: Available scheduled calls:', scheduledCallsSnapshot.docs.map(d => d.id));
-          
-          const scheduledCallDoc = scheduledCallsSnapshot.docs.find(doc => doc.id === scheduledCallId);
+          const scheduledCallDoc = await getDoc(doc(db, 'scheduledCalls', scheduledCallId) as DocumentReference);
 
-          if (scheduledCallDoc) {
+          if (scheduledCallDoc.exists()) {
             const scheduledCall = {
               id: scheduledCallDoc.id,
               ...scheduledCallDoc.data(),
@@ -152,15 +134,9 @@ export class CallTriggerService {
 
             console.log('📞 Response: Found scheduled call:', scheduledCall);
 
-            const usersQuery = query(
-              collection(db, 'users')
-            );
-            const usersSnapshot = await getDocs(usersQuery);
-            console.log('🔍 Response: Available users:', usersSnapshot.docs.map(d => d.id));
-            
-            const userDoc = usersSnapshot.docs.find(doc => doc.id === userId);
+            const userDoc = await getDoc(doc(db, 'users', userId) as DocumentReference);
 
-            if (userDoc) {
+            if (userDoc.exists()) {
               const userData = userDoc.data();
               const userName = `${userData.firstName} ${userData.lastName}`;
 

@@ -266,13 +266,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e1e8ed',
     overflow: 'hidden',
-    minHeight: Platform.OS === 'android' ? 80 : 60,
+    minHeight: Platform.OS === 'android' ? 100 : 60,
     paddingVertical: Platform.OS === 'android' ? 0 : 8,
   },
   picker: {
-    height: Platform.OS === 'android' ? 80 : 50,
+    height: Platform.OS === 'android' ? 100 : 50,
     color: '#2c3e50',
-    fontSize: Platform.OS === 'android' ? 22 : 16,
+    fontSize: Platform.OS === 'android' ? 24 : 16,
     backgroundColor: 'transparent',
   },
   button: {
@@ -304,9 +304,9 @@ const styles = StyleSheet.create({
     color: '#2c3e50',
   },
   pickerItem: {
-    fontSize: Platform.OS === 'android' ? 22 : 16,
+    fontSize: Platform.OS === 'android' ? 24 : 16,
     color: '#2c3e50',
-    height: Platform.OS === 'android' ? 80 : 50,
+    height: Platform.OS === 'android' ? 100 : 50,
     fontWeight: Platform.OS === 'android' ? '700' : 'normal',
   },
 });
