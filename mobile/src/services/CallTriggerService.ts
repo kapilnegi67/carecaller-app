@@ -70,18 +70,19 @@ export class CallTriggerService {
     onCallTriggered: (scheduledCall: ScheduledCall, userName: string, userId: string) => void
   ): () => void {
     const subscription = Notifications.addNotificationReceivedListener(async (notification) => {
+      console.log('📞 Notification received:', notification.request.content.data);
       const { scheduledCallId, callType, userId } = notification.request.content.data || {};
 
       if (scheduledCallId && callType && userId) {
         try {
           const scheduledCallsQuery = query(
-            collection(db, 'scheduledCalls'),
-            where('id', '==', scheduledCallId)
+            collection(db, 'scheduledCalls')
           );
           const scheduledCallsSnapshot = await getDocs(scheduledCallsQuery);
+          
+          const scheduledCallDoc = scheduledCallsSnapshot.docs.find(doc => doc.id === scheduledCallId);
 
-          if (!scheduledCallsSnapshot.empty) {
-            const scheduledCallDoc = scheduledCallsSnapshot.docs[0];
+          if (scheduledCallDoc) {
             const scheduledCall = {
               id: scheduledCallDoc.id,
               ...scheduledCallDoc.data(),
@@ -90,13 +91,13 @@ export class CallTriggerService {
             } as ScheduledCall;
 
             const usersQuery = query(
-              collection(db, 'users'),
-              where('id', '==', userId)
+              collection(db, 'users')
             );
             const usersSnapshot = await getDocs(usersQuery);
+            
+            const userDoc = usersSnapshot.docs.find(doc => doc.id === userId);
 
-            if (!usersSnapshot.empty) {
-              const userDoc = usersSnapshot.docs[0];
+            if (userDoc) {
               const userData = userDoc.data();
               const userName = `${userData.firstName} ${userData.lastName}`;
 
@@ -115,18 +116,19 @@ export class CallTriggerService {
     });
 
     const responseSubscription = Notifications.addNotificationResponseReceivedListener(async (response) => {
+      console.log('📞 Notification response received:', response.notification.request.content.data);
       const { scheduledCallId, callType, userId } = response.notification.request.content.data || {};
 
       if (scheduledCallId && callType && userId) {
         try {
           const scheduledCallsQuery = query(
-            collection(db, 'scheduledCalls'),
-            where('id', '==', scheduledCallId)
+            collection(db, 'scheduledCalls')
           );
           const scheduledCallsSnapshot = await getDocs(scheduledCallsQuery);
+          
+          const scheduledCallDoc = scheduledCallsSnapshot.docs.find(doc => doc.id === scheduledCallId);
 
-          if (!scheduledCallsSnapshot.empty) {
-            const scheduledCallDoc = scheduledCallsSnapshot.docs[0];
+          if (scheduledCallDoc) {
             const scheduledCall = {
               id: scheduledCallDoc.id,
               ...scheduledCallDoc.data(),
@@ -135,13 +137,13 @@ export class CallTriggerService {
             } as ScheduledCall;
 
             const usersQuery = query(
-              collection(db, 'users'),
-              where('id', '==', userId)
+              collection(db, 'users')
             );
             const usersSnapshot = await getDocs(usersQuery);
+            
+            const userDoc = usersSnapshot.docs.find(doc => doc.id === userId);
 
-            if (!usersSnapshot.empty) {
-              const userDoc = usersSnapshot.docs[0];
+            if (userDoc) {
               const userData = userDoc.data();
               const userName = `${userData.firstName} ${userData.lastName}`;
 

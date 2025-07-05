@@ -267,9 +267,10 @@ const styles = StyleSheet.create({
     borderColor: '#e1e8ed',
     overflow: 'hidden',
     minHeight: 60,
+    paddingVertical: Platform.OS === 'android' ? 0 : 8,
   },
   picker: {
-    height: 60,
+    height: Platform.OS === 'android' ? 60 : 50,
     color: '#2c3e50',
     fontSize: 16,
     backgroundColor: 'transparent',
@@ -303,8 +304,9 @@ const styles = StyleSheet.create({
     color: '#2c3e50',
   },
   pickerItem: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'android' ? 18 : 16,
     color: '#2c3e50',
-    height: 60,
+    height: Platform.OS === 'android' ? 60 : 50,
+    fontWeight: Platform.OS === 'android' ? '500' : 'normal',
   },
 });
