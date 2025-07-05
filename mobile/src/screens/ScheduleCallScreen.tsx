@@ -154,9 +154,9 @@ export const ScheduleCallScreen: React.FC = () => {
             style={styles.picker}
             itemStyle={styles.pickerItem}
           >
-            <Picker.Item label="Wellness Check" value="wellness-check" color="#000000" />
-            <Picker.Item label="Medication Reminder" value="medication-reminder" color="#000000" />
-            <Picker.Item label="Social Call" value="social-call" color="#000000" />
+            <Picker.Item label="Wellness Check" value="wellness-check" color="#2c3e50" />
+            <Picker.Item label="Medication Reminder" value="medication-reminder" color="#2c3e50" />
+            <Picker.Item label="Social Call" value="social-call" color="#2c3e50" />
           </Picker>
         </View>
       </View>
@@ -177,11 +177,11 @@ export const ScheduleCallScreen: React.FC = () => {
             style={styles.picker}
             itemStyle={styles.pickerItem}
           >
-            <Picker.Item label="15 minutes" value={15} color="#000000" />
-            <Picker.Item label="30 minutes" value={30} color="#000000" />
-            <Picker.Item label="45 minutes" value={45} color="#000000" />
-            <Picker.Item label="60 minutes" value={60} color="#000000" />
-            <Picker.Item label="Custom minutes" value="custom" color="#000000" />
+            <Picker.Item label="15 minutes" value={15} color="#2c3e50" />
+            <Picker.Item label="30 minutes" value={30} color="#2c3e50" />
+            <Picker.Item label="45 minutes" value={45} color="#2c3e50" />
+            <Picker.Item label="60 minutes" value={60} color="#2c3e50" />
+            <Picker.Item label="Custom minutes" value="custom" color="#2c3e50" />
           </Picker>
         </View>
         
@@ -261,20 +261,19 @@ const styles = StyleSheet.create({
     color: '#2c3e50',
   },
   pickerContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8f9fa',
     borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#2c3e50',
+    borderWidth: 1,
+    borderColor: '#e1e8ed',
     overflow: 'hidden',
-    minHeight: Platform.OS === 'android' ? 120 : 60,
+    minHeight: 60,
     paddingVertical: Platform.OS === 'android' ? 0 : 8,
   },
   picker: {
-    height: Platform.OS === 'android' ? 120 : 50,
-    color: '#000000',
-    fontSize: Platform.OS === 'android' ? 28 : 16,
-    backgroundColor: '#ffffff',
-    fontWeight: Platform.OS === 'android' ? 'bold' : 'normal',
+    height: Platform.OS === 'android' ? 60 : 50,
+    color: '#2c3e50',
+    fontSize: 16,
+    backgroundColor: 'transparent',
   },
   button: {
     backgroundColor: '#27ae60',
@@ -305,10 +304,9 @@ const styles = StyleSheet.create({
     color: '#2c3e50',
   },
   pickerItem: {
-    fontSize: Platform.OS === 'android' ? 28 : 16,
-    color: '#000000',
-    height: Platform.OS === 'android' ? 120 : 50,
-    fontWeight: Platform.OS === 'android' ? 'bold' : 'normal',
-    backgroundColor: '#ffffff',
+    fontSize: Platform.OS === 'android' ? 18 : 16,
+    color: '#2c3e50',
+    height: Platform.OS === 'android' ? 60 : 50,
+    fontWeight: Platform.OS === 'android' ? '500' : 'normal',
   },
 });
