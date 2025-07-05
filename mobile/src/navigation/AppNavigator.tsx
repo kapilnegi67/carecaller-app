@@ -17,6 +17,10 @@ import { VoiceCallScreen } from '../screens/VoiceCallScreen';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
+export const navigationRef = createNavigationContainerRef();
+
+
+
 const AuthStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Login" component={LoginScreen} />
@@ -87,15 +91,16 @@ const MainTabs = () => (
   </Tab.Navigator>
 );
 
-export const navigationRef = createNavigationContainerRef();
 
 export const AppNavigator: React.FC = () => {
   const { currentUser, loading, isNewUser, userProfile } = useAuth();
 
   useEffect(() => {
     if (currentUser && userProfile) {
+      console.log('🔧 Setting up notification listener for user:', userProfile.firstName);
       const unsubscribe = CallTriggerService.setupNotificationListener(
         (scheduledCall, userName, userId) => {
+          console.log('🚀 Navigating to VoiceCallScreen for:', userName);
           if (navigationRef.isReady()) {
             (navigationRef as any).navigate('VoiceCall', {
               scheduledCall,
