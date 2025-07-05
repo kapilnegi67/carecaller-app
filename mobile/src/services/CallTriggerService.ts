@@ -75,6 +75,7 @@ export class CallTriggerService {
 
       if (scheduledCallId && callType && userId) {
         try {
+          console.log('🔍 Looking for scheduled call:', scheduledCallId);
           const scheduledCallsQuery = query(
             collection(db, 'scheduledCalls')
           );
@@ -90,6 +91,8 @@ export class CallTriggerService {
               createdAt: scheduledCallDoc.data().createdAt.toDate(),
             } as ScheduledCall;
 
+            console.log('📞 Found scheduled call:', scheduledCall);
+
             const usersQuery = query(
               collection(db, 'users')
             );
@@ -101,13 +104,20 @@ export class CallTriggerService {
               const userData = userDoc.data();
               const userName = `${userData.firstName} ${userData.lastName}`;
 
+              console.log('👤 Found user:', userName);
+
               await updateDoc(doc(db, 'scheduledCalls', scheduledCall.id), {
                 status: 'in-progress',
                 startTime: new Date(),
               });
 
+              console.log('🚀 Triggering voice call for:', userName);
               onCallTriggered(scheduledCall, userName, scheduledCall.userId);
+            } else {
+              console.error('❌ User not found:', userId);
             }
+          } else {
+            console.error('❌ Scheduled call not found:', scheduledCallId);
           }
         } catch (error) {
           console.error('Error handling call notification:', error);
@@ -121,6 +131,7 @@ export class CallTriggerService {
 
       if (scheduledCallId && callType && userId) {
         try {
+          console.log('🔍 Looking for scheduled call:', scheduledCallId);
           const scheduledCallsQuery = query(
             collection(db, 'scheduledCalls')
           );
@@ -136,6 +147,8 @@ export class CallTriggerService {
               createdAt: scheduledCallDoc.data().createdAt.toDate(),
             } as ScheduledCall;
 
+            console.log('📞 Found scheduled call:', scheduledCall);
+
             const usersQuery = query(
               collection(db, 'users')
             );
@@ -147,13 +160,20 @@ export class CallTriggerService {
               const userData = userDoc.data();
               const userName = `${userData.firstName} ${userData.lastName}`;
 
+              console.log('👤 Found user:', userName);
+
               await updateDoc(doc(db, 'scheduledCalls', scheduledCall.id), {
                 status: 'in-progress',
                 startTime: new Date(),
               });
 
+              console.log('🚀 Triggering voice call for:', userName);
               onCallTriggered(scheduledCall, userName, scheduledCall.userId);
+            } else {
+              console.error('❌ User not found:', userId);
             }
+          } else {
+            console.error('❌ Scheduled call not found:', scheduledCallId);
           }
         } catch (error) {
           console.error('Error handling call notification response:', error);
