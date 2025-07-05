@@ -99,6 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       firstName: userData.firstName || '',
       lastName: userData.lastName || '',
       phone: userData.phone,
+      countryCode: userData.countryCode || '1',
       dateOfBirth: userData.dateOfBirth,
       ...(userData.emergencyContact && { emergencyContact: userData.emergencyContact }),
       createdAt: new Date(),

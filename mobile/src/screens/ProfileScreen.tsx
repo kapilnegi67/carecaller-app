@@ -33,6 +33,7 @@ export const ProfileScreen: React.FC = () => {
     firstName: '',
     lastName: '',
     phone: '',
+    countryCode: '1',
     dateOfBirth: new Date().toISOString().split('T')[0], // Store as YYYY-MM-DD string
     emergencyContact: {
       name: '',
@@ -48,6 +49,7 @@ export const ProfileScreen: React.FC = () => {
         firstName: userProfile.firstName || '',
         lastName: userProfile.lastName || '',
         phone: userProfile.phone || '',
+        countryCode: userProfile.countryCode || '1',
         dateOfBirth: userProfile.dateOfBirth || new Date().toISOString().split('T')[0],
         emergencyContact: userProfile.emergencyContact || {
           name: '',
@@ -155,6 +157,8 @@ export const ProfileScreen: React.FC = () => {
           value={formData.phone}
           onChangeText={(value) => updateFormData('phone', value)}
           placeholder="Phone Number"
+          initialCountryCode={formData.countryCode}
+          onCountryChange={(countryCode) => updateFormData('countryCode', countryCode)}
         />
 
         <Text style={styles.inputLabel}>Date of Birth</Text>

@@ -17,19 +17,19 @@ interface CallItem extends CallHistory {
 }
 
 export const CallHistoryScreen: React.FC = () => {
-  const { userProfile } = useAuth();
+  const { userProfile, currentUser } = useAuth();
   const [callHistory, setCallHistory] = useState<CallItem[]>([]);
   const [scheduledCalls, setScheduledCalls] = useState<ScheduledCall[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = async () => {
-    if (!userProfile) return;
+    if (!userProfile || !currentUser) return;
 
     try {
       const historyQuery = query(
         collection(db, 'callHistory'),
-        where('userId', '==', userProfile.id),
+        where('userId', '==', currentUser.uid),
         orderBy('startTime', 'desc')
       );
       const historySnapshot = await getDocs(historyQuery);
@@ -43,7 +43,7 @@ export const CallHistoryScreen: React.FC = () => {
 
       const scheduledQuery = query(
         collection(db, 'scheduledCalls'),
-        where('userId', '==', userProfile.id),
+        where('userId', '==', currentUser.uid),
         orderBy('scheduledTime', 'desc')
       );
       const scheduledSnapshot = await getDocs(scheduledQuery);
@@ -67,7 +67,7 @@ export const CallHistoryScreen: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, [userProfile]);
+  }, [userProfile, currentUser]);
 
   const onRefresh = () => {
     setRefreshing(true);

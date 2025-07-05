@@ -18,7 +18,7 @@ import { ScheduledCall } from '../types';
 import { CallTriggerService } from '../services/CallTriggerService';
 
 export const ScheduleCallScreen: React.FC = () => {
-  const { userProfile } = useAuth();
+  const { userProfile, currentUser } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -30,7 +30,7 @@ export const ScheduleCallScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const handleScheduleCall = async () => {
-    if (!userProfile) return;
+    if (!userProfile || !currentUser) return;
 
     let finalDuration = duration;
     if (useCustomDuration) {
@@ -54,7 +54,7 @@ export const ScheduleCallScreen: React.FC = () => {
     setLoading(true);
     try {
       const newCall: Omit<ScheduledCall, 'id'> = {
-        userId: userProfile.id,
+        userId: currentUser.uid,
         scheduledTime: scheduledDateTime,
         duration: finalDuration,
         type: callType,
@@ -170,7 +170,7 @@ export const ScheduleCallScreen: React.FC = () => {
                 setUseCustomDuration(true);
               } else {
                 setUseCustomDuration(false);
-                setDuration(itemValue);
+                setDuration(Number(itemValue));
               }
             }}
             style={styles.picker}

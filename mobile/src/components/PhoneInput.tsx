@@ -6,6 +6,8 @@ interface PhoneInputProps {
   onChangeText: (text: string) => void;
   placeholder?: string;
   error?: boolean;
+  initialCountryCode?: string;
+  onCountryChange?: (countryCode: string) => void;
 }
 
 interface Country {
@@ -32,9 +34,19 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   value,
   onChangeText,
   placeholder = 'Phone Number',
-  error
+  error,
+  initialCountryCode,
+  onCountryChange
 }) => {
-  const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
+  const getInitialCountry = () => {
+    if (initialCountryCode) {
+      const country = countries.find(c => c.callingCode === initialCountryCode);
+      if (country) return country;
+    }
+    return countries[0];
+  };
+
+  const [selectedCountry, setSelectedCountry] = useState<Country>(getInitialCountry());
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [searchText, setSearchText] = useState('');
 
@@ -47,6 +59,9 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
     setSelectedCountry(country);
     setShowCountryPicker(false);
     setSearchText('');
+    if (onCountryChange) {
+      onCountryChange(country.callingCode);
+    }
   };
 
   return (
