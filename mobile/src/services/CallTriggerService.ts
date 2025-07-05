@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { collection, query, where, getDocs, updateDoc, doc, addDoc, getDoc, Firestore } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc, addDoc, getDoc, DocumentReference } from 'firebase/firestore';
 import { db } from '../../firebase.config';
 import { ScheduledCall, CallHistory } from '../types';
 
@@ -76,7 +76,8 @@ export class CallTriggerService {
       if (scheduledCallId && callType && userId) {
         try {
           console.log('🔍 Looking for scheduled call:', scheduledCallId);
-          const scheduledCallDoc = await getDoc(doc(db as Firestore, 'scheduledCalls', scheduledCallId));
+          const scheduledCallRef = doc(db, 'scheduledCalls', scheduledCallId) as DocumentReference;
+          const scheduledCallDoc = await getDoc(scheduledCallRef);
 
           if (scheduledCallDoc.exists()) {
             const data = scheduledCallDoc.data();
@@ -89,7 +90,8 @@ export class CallTriggerService {
 
             console.log('📞 Found scheduled call:', scheduledCall);
 
-            const userDoc = await getDoc(doc(db as Firestore, 'users', userId));
+            const userRef = doc(db, 'users', userId) as DocumentReference;
+            const userDoc = await getDoc(userRef);
 
             if (userDoc.exists()) {
               const userData = userDoc.data() as any;
@@ -123,7 +125,8 @@ export class CallTriggerService {
       if (scheduledCallId && callType && userId) {
         try {
           console.log('🔍 Response: Looking for scheduled call:', scheduledCallId);
-          const scheduledCallDoc = await getDoc(doc(db as Firestore, 'scheduledCalls', scheduledCallId));
+          const scheduledCallRef = doc(db, 'scheduledCalls', scheduledCallId) as DocumentReference;
+          const scheduledCallDoc = await getDoc(scheduledCallRef);
 
           if (scheduledCallDoc.exists()) {
             const data = scheduledCallDoc.data();
@@ -136,7 +139,8 @@ export class CallTriggerService {
 
             console.log('📞 Response: Found scheduled call:', scheduledCall);
 
-            const userDoc = await getDoc(doc(db as Firestore, 'users', userId));
+            const userRef = doc(db, 'users', userId) as DocumentReference;
+            const userDoc = await getDoc(userRef);
 
             if (userDoc.exists()) {
               const userData = userDoc.data() as any;
