@@ -152,6 +152,7 @@ export const ScheduleCallScreen: React.FC = () => {
             selectedValue={callType}
             onValueChange={(itemValue) => setCallType(itemValue)}
             style={styles.picker}
+            itemStyle={styles.pickerItem}
           >
             <Picker.Item label="Wellness Check" value="wellness-check" color="#2c3e50" />
             <Picker.Item label="Medication Reminder" value="medication-reminder" color="#2c3e50" />
@@ -174,6 +175,7 @@ export const ScheduleCallScreen: React.FC = () => {
               }
             }}
             style={styles.picker}
+            itemStyle={styles.pickerItem}
           >
             <Picker.Item label="15 minutes" value={15} color="#2c3e50" />
             <Picker.Item label="30 minutes" value={30} color="#2c3e50" />
@@ -264,9 +266,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e1e8ed',
     overflow: 'hidden',
+    minHeight: 60,
   },
   picker: {
-    height: 50,
+    height: 60,
     color: '#2c3e50',
     fontSize: 16,
     backgroundColor: 'transparent',
@@ -298,5 +301,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     color: '#2c3e50',
+  },
+  pickerItem: {
+    fontSize: 16,
+    color: '#2c3e50',
+    height: 60,
   },
 });
