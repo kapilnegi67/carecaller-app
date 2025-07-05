@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { collection, query, where, getDocs, updateDoc, doc, addDoc, getDoc, DocumentReference } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc, addDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase.config';
 import { ScheduledCall, CallHistory } from '../types';
 
@@ -76,22 +76,23 @@ export class CallTriggerService {
       if (scheduledCallId && callType && userId) {
         try {
           console.log('🔍 Looking for scheduled call:', scheduledCallId);
-          const scheduledCallDoc = await getDoc(doc(db, 'scheduledCalls', scheduledCallId) as DocumentReference);
+          const scheduledCallDoc = await getDoc(doc(db, 'scheduledCalls', scheduledCallId));
 
           if (scheduledCallDoc.exists()) {
+            const data = scheduledCallDoc.data();
             const scheduledCall = {
               id: scheduledCallDoc.id,
-              ...scheduledCallDoc.data(),
-              scheduledTime: scheduledCallDoc.data().scheduledTime.toDate(),
-              createdAt: scheduledCallDoc.data().createdAt.toDate(),
+              ...data,
+              scheduledTime: data?.scheduledTime.toDate(),
+              createdAt: data?.createdAt.toDate(),
             } as ScheduledCall;
 
             console.log('📞 Found scheduled call:', scheduledCall);
 
-            const userDoc = await getDoc(doc(db, 'users', userId) as DocumentReference);
+            const userDoc = await getDoc(doc(db, 'users', userId));
 
             if (userDoc.exists()) {
-              const userData = userDoc.data();
+              const userData = userDoc.data() as any;
               const userName = `${userData.firstName} ${userData.lastName}`;
 
               console.log('👤 Found user:', userName);
@@ -122,22 +123,23 @@ export class CallTriggerService {
       if (scheduledCallId && callType && userId) {
         try {
           console.log('🔍 Response: Looking for scheduled call:', scheduledCallId);
-          const scheduledCallDoc = await getDoc(doc(db, 'scheduledCalls', scheduledCallId) as DocumentReference);
+          const scheduledCallDoc = await getDoc(doc(db, 'scheduledCalls', scheduledCallId));
 
           if (scheduledCallDoc.exists()) {
+            const data = scheduledCallDoc.data();
             const scheduledCall = {
               id: scheduledCallDoc.id,
-              ...scheduledCallDoc.data(),
-              scheduledTime: scheduledCallDoc.data().scheduledTime.toDate(),
-              createdAt: scheduledCallDoc.data().createdAt.toDate(),
+              ...data,
+              scheduledTime: data?.scheduledTime.toDate(),
+              createdAt: data?.createdAt.toDate(),
             } as ScheduledCall;
 
             console.log('📞 Response: Found scheduled call:', scheduledCall);
 
-            const userDoc = await getDoc(doc(db, 'users', userId) as DocumentReference);
+            const userDoc = await getDoc(doc(db, 'users', userId));
 
             if (userDoc.exists()) {
-              const userData = userDoc.data();
+              const userData = userDoc.data() as any;
               const userName = `${userData.firstName} ${userData.lastName}`;
 
               console.log('👤 Response: Found user:', userName);
