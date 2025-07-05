@@ -76,20 +76,19 @@ export class CallTriggerService {
       if (scheduledCallId && callType && userId) {
         try {
           console.log('🔍 Looking for scheduled call:', scheduledCallId);
-          const scheduledCallDoc = await getDoc(doc(db as any, 'scheduledCalls', scheduledCallId as string));
+          const scheduledCallDoc = await getDoc(doc(db, 'scheduledCalls', scheduledCallId as string));
 
           if (scheduledCallDoc.exists()) {
-            const data = scheduledCallDoc.data();
             const scheduledCall = {
               id: scheduledCallDoc.id,
-              ...data,
-              scheduledTime: data?.scheduledTime.toDate(),
-              createdAt: data?.createdAt.toDate(),
+              ...scheduledCallDoc.data(),
+              scheduledTime: scheduledCallDoc.data()?.scheduledTime.toDate(),
+              createdAt: scheduledCallDoc.data()?.createdAt.toDate(),
             } as ScheduledCall;
 
             console.log('📞 Found scheduled call:', scheduledCall);
 
-            const userDoc = await getDoc(doc(db as any, 'users', userId as string));
+            const userDoc = await getDoc(doc(db, 'users', userId as string));
 
             if (userDoc.exists()) {
               const userData = userDoc.data() as any;
@@ -123,20 +122,19 @@ export class CallTriggerService {
       if (scheduledCallId && callType && userId) {
         try {
           console.log('🔍 Response: Looking for scheduled call:', scheduledCallId);
-          const scheduledCallDoc = await getDoc(doc(db as any, 'scheduledCalls', scheduledCallId as string));
+          const scheduledCallDoc = await getDoc(doc(db, 'scheduledCalls', scheduledCallId as string));
 
           if (scheduledCallDoc.exists()) {
-            const data = scheduledCallDoc.data();
             const scheduledCall = {
               id: scheduledCallDoc.id,
-              ...data,
-              scheduledTime: data?.scheduledTime.toDate(),
-              createdAt: data?.createdAt.toDate(),
+              ...scheduledCallDoc.data(),
+              scheduledTime: scheduledCallDoc.data()?.scheduledTime.toDate(),
+              createdAt: scheduledCallDoc.data()?.createdAt.toDate(),
             } as ScheduledCall;
 
             console.log('📞 Response: Found scheduled call:', scheduledCall);
 
-            const userDoc = await getDoc(doc(db as any, 'users', userId as string));
+            const userDoc = await getDoc(doc(db, 'users', userId as string));
 
             if (userDoc.exists()) {
               const userData = userDoc.data() as any;

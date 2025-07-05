@@ -154,9 +154,9 @@ export const ScheduleCallScreen: React.FC = () => {
             style={styles.picker}
             itemStyle={styles.pickerItem}
           >
-            <Picker.Item label="Wellness Check" value="wellness-check" color="#2c3e50" />
-            <Picker.Item label="Medication Reminder" value="medication-reminder" color="#2c3e50" />
-            <Picker.Item label="Social Call" value="social-call" color="#2c3e50" />
+            <Picker.Item label="Wellness Check" value="wellness-check" color="#000000" />
+            <Picker.Item label="Medication Reminder" value="medication-reminder" color="#000000" />
+            <Picker.Item label="Social Call" value="social-call" color="#000000" />
           </Picker>
         </View>
       </View>
@@ -177,11 +177,11 @@ export const ScheduleCallScreen: React.FC = () => {
             style={styles.picker}
             itemStyle={styles.pickerItem}
           >
-            <Picker.Item label="15 minutes" value={15} color="#2c3e50" />
-            <Picker.Item label="30 minutes" value={30} color="#2c3e50" />
-            <Picker.Item label="45 minutes" value={45} color="#2c3e50" />
-            <Picker.Item label="60 minutes" value={60} color="#2c3e50" />
-            <Picker.Item label="Custom minutes" value="custom" color="#2c3e50" />
+            <Picker.Item label="15 minutes" value={15} color="#000000" />
+            <Picker.Item label="30 minutes" value={30} color="#000000" />
+            <Picker.Item label="45 minutes" value={45} color="#000000" />
+            <Picker.Item label="60 minutes" value={60} color="#000000" />
+            <Picker.Item label="Custom minutes" value="custom" color="#000000" />
           </Picker>
         </View>
         
