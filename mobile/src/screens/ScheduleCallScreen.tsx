@@ -153,9 +153,9 @@ export const ScheduleCallScreen: React.FC = () => {
             onValueChange={(itemValue) => setCallType(itemValue)}
             style={styles.picker}
           >
-            <Picker.Item label="Wellness Check" value="wellness-check" />
-            <Picker.Item label="Medication Reminder" value="medication-reminder" />
-            <Picker.Item label="Social Call" value="social-call" />
+            <Picker.Item label="Wellness Check" value="wellness-check" color="#2c3e50" />
+            <Picker.Item label="Medication Reminder" value="medication-reminder" color="#2c3e50" />
+            <Picker.Item label="Social Call" value="social-call" color="#2c3e50" />
           </Picker>
         </View>
       </View>
@@ -175,11 +175,11 @@ export const ScheduleCallScreen: React.FC = () => {
             }}
             style={styles.picker}
           >
-            <Picker.Item label="15 minutes" value={15} />
-            <Picker.Item label="30 minutes" value={30} />
-            <Picker.Item label="45 minutes" value={45} />
-            <Picker.Item label="60 minutes" value={60} />
-            <Picker.Item label="Custom minutes" value="custom" />
+            <Picker.Item label="15 minutes" value={15} color="#2c3e50" />
+            <Picker.Item label="30 minutes" value={30} color="#2c3e50" />
+            <Picker.Item label="45 minutes" value={45} color="#2c3e50" />
+            <Picker.Item label="60 minutes" value={60} color="#2c3e50" />
+            <Picker.Item label="Custom minutes" value="custom" color="#2c3e50" />
           </Picker>
         </View>
         
@@ -263,11 +263,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e1e8ed',
+    overflow: 'hidden',
   },
   picker: {
     height: 50,
     color: '#2c3e50',
     fontSize: 16,
+    backgroundColor: 'transparent',
   },
   button: {
     backgroundColor: '#27ae60',
