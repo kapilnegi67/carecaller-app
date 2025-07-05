@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   picker: {
     height: Platform.OS === 'android' ? 80 : 50,
     color: '#2c3e50',
-    fontSize: Platform.OS === 'android' ? 20 : 16,
+    fontSize: Platform.OS === 'android' ? 22 : 16,
     backgroundColor: 'transparent',
   },
   button: {

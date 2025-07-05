@@ -80,6 +80,7 @@ export class CallTriggerService {
             collection(db, 'scheduledCalls')
           );
           const scheduledCallsSnapshot = await getDocs(scheduledCallsQuery);
+          console.log('🔍 Available scheduled calls:', scheduledCallsSnapshot.docs.map(d => d.id));
           
           const scheduledCallDoc = scheduledCallsSnapshot.docs.find(doc => doc.id === scheduledCallId);
 
@@ -97,6 +98,7 @@ export class CallTriggerService {
               collection(db, 'users')
             );
             const usersSnapshot = await getDocs(usersQuery);
+            console.log('🔍 Available users:', usersSnapshot.docs.map(d => d.id));
             
             const userDoc = usersSnapshot.docs.find(doc => doc.id === userId);
 
@@ -131,11 +133,12 @@ export class CallTriggerService {
 
       if (scheduledCallId && callType && userId) {
         try {
-          console.log('🔍 Looking for scheduled call:', scheduledCallId);
+          console.log('🔍 Response: Looking for scheduled call:', scheduledCallId);
           const scheduledCallsQuery = query(
             collection(db, 'scheduledCalls')
           );
           const scheduledCallsSnapshot = await getDocs(scheduledCallsQuery);
+          console.log('🔍 Response: Available scheduled calls:', scheduledCallsSnapshot.docs.map(d => d.id));
           
           const scheduledCallDoc = scheduledCallsSnapshot.docs.find(doc => doc.id === scheduledCallId);
 
@@ -147,12 +150,13 @@ export class CallTriggerService {
               createdAt: scheduledCallDoc.data().createdAt.toDate(),
             } as ScheduledCall;
 
-            console.log('📞 Found scheduled call:', scheduledCall);
+            console.log('📞 Response: Found scheduled call:', scheduledCall);
 
             const usersQuery = query(
               collection(db, 'users')
             );
             const usersSnapshot = await getDocs(usersQuery);
+            console.log('🔍 Response: Available users:', usersSnapshot.docs.map(d => d.id));
             
             const userDoc = usersSnapshot.docs.find(doc => doc.id === userId);
 
@@ -160,20 +164,20 @@ export class CallTriggerService {
               const userData = userDoc.data();
               const userName = `${userData.firstName} ${userData.lastName}`;
 
-              console.log('👤 Found user:', userName);
+              console.log('👤 Response: Found user:', userName);
 
               await updateDoc(doc(db, 'scheduledCalls', scheduledCall.id), {
                 status: 'in-progress',
                 startTime: new Date(),
               });
 
-              console.log('🚀 Triggering voice call for:', userName);
+              console.log('🚀 Response: Triggering voice call for:', userName);
               onCallTriggered(scheduledCall, userName, scheduledCall.userId);
             } else {
-              console.error('❌ User not found:', userId);
+              console.error('❌ Response: User not found:', userId);
             }
           } else {
-            console.error('❌ Scheduled call not found:', scheduledCallId);
+            console.error('❌ Response: Scheduled call not found:', scheduledCallId);
           }
         } catch (error) {
           console.error('Error handling call notification response:', error);
