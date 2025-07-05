@@ -32,15 +32,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCurrentUser(user);
       
       if (user) {
-        const adminDoc = await getDoc(doc(db, 'agents', user.uid));
-        if (adminDoc.exists() && adminDoc.data().role === 'admin') {
-          setAdminProfile({
-            ...adminDoc.data(),
-            createdAt: adminDoc.data().createdAt.toDate(),
-          } as Agent);
-        } else {
+        try {
+          const adminDoc = await getDoc(doc(db, 'agents', user.uid));
+          if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+            setAdminProfile({
+              ...adminDoc.data(),
+              createdAt: adminDoc.data().createdAt.toDate(),
+            } as Agent);
+          } else {
+            setAdminProfile(null);
+            await signOut(auth); // Sign out non-admin users
+          }
+        } catch (error) {
+          console.error('Error fetching admin profile:', error);
           setAdminProfile(null);
-          await signOut(auth); // Sign out non-admin users
+          await signOut(auth); // Sign out on error for security
         }
       } else {
         setAdminProfile(null);
