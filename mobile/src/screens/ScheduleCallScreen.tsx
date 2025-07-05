@@ -15,7 +15,6 @@ import { collection, addDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../../firebase.config';
 import { ScheduledCall } from '../types';
-import { CallTriggerService } from '../services/CallTriggerService';
 
 export const ScheduleCallScreen: React.FC = () => {
   const { userProfile, currentUser } = useAuth();
@@ -63,12 +62,9 @@ export const ScheduleCallScreen: React.FC = () => {
         updatedAt: new Date(),
       };
 
-      const docRef = await addDoc(collection(db, 'scheduledCalls'), newCall);
+      await addDoc(collection(db, 'scheduledCalls'), newCall);
       
-      const scheduledCallWithId = { ...newCall, id: docRef.id };
-      await CallTriggerService.scheduleCallNotification(scheduledCallWithId);
-      
-      Alert.alert('Success', 'Call scheduled successfully! You will receive a notification when it\'s time for your AI assistant call.');
+      Alert.alert('Success', 'Call scheduled successfully!');
       
       setSelectedDate(new Date());
       setSelectedTime(new Date());
