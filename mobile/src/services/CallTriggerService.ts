@@ -76,7 +76,7 @@ export class CallTriggerService {
       if (scheduledCallId && callType && userId) {
         try {
           console.log('🔍 Looking for scheduled call:', scheduledCallId);
-          const scheduledCallDoc = await getDoc(doc(db, 'scheduledCalls', scheduledCallId));
+          const scheduledCallDoc = await getDoc(doc(db as any, 'scheduledCalls', scheduledCallId));
 
           if (scheduledCallDoc.exists()) {
             const data = scheduledCallDoc.data();
@@ -89,7 +89,7 @@ export class CallTriggerService {
 
             console.log('📞 Found scheduled call:', scheduledCall);
 
-            const userDoc = await getDoc(doc(db, 'users', userId));
+            const userDoc = await getDoc(doc(db as any, 'users', userId));
 
             if (userDoc.exists()) {
               const userData = userDoc.data() as any;
@@ -123,7 +123,7 @@ export class CallTriggerService {
       if (scheduledCallId && callType && userId) {
         try {
           console.log('🔍 Response: Looking for scheduled call:', scheduledCallId);
-          const scheduledCallDoc = await getDoc(doc(db, 'scheduledCalls', scheduledCallId));
+          const scheduledCallDoc = await getDoc(doc(db as any, 'scheduledCalls', scheduledCallId));
 
           if (scheduledCallDoc.exists()) {
             const data = scheduledCallDoc.data();
@@ -136,7 +136,7 @@ export class CallTriggerService {
 
             console.log('📞 Response: Found scheduled call:', scheduledCall);
 
-            const userDoc = await getDoc(doc(db, 'users', userId));
+            const userDoc = await getDoc(doc(db as any, 'users', userId));
 
             if (userDoc.exists()) {
               const userData = userDoc.data() as any;
