@@ -24,7 +24,21 @@
         },
         {
           "fieldPath": "scheduledTime",
-          "order": "DESCENDING" 
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "scheduledCalls",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "scheduledTime",
+          "order": "ASCENDING"
         }
       ]
     }
