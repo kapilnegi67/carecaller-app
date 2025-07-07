@@ -6,8 +6,9 @@ import {
   StyleSheet,
   RefreshControl,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, deleteDoc, doc, writeBatch } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../../firebase.config';
 import { CallHistory, ScheduledCall } from '../types';
@@ -110,6 +111,69 @@ export const CallHistoryScreen: React.FC = () => {
     fetchData();
   };
 
+  const deleteCallHistory = async (callId: string, isScheduled: boolean = false) => {
+    try {
+      const collectionName = isScheduled ? 'scheduledCalls' : 'callHistory';
+      await deleteDoc(doc(db, collectionName, callId));
+      
+      Alert.alert('Success', 'Call record deleted successfully');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting call record:', error);
+      Alert.alert('Error', 'Failed to delete call record');
+    }
+  };
+
+  const deleteAllCallHistory = async () => {
+    if (!currentUser) return;
+
+    Alert.alert(
+      'Delete All Records',
+      'Are you sure you want to delete all call history and scheduled calls? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete All',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const batch = writeBatch(db);
+
+              const historyQuery = query(
+                collection(db, 'callHistory'),
+                where('userId', '==', currentUser.uid)
+              );
+              const historySnapshot = await getDocs(historyQuery);
+              historySnapshot.docs.forEach((doc) => {
+                batch.delete(doc.ref);
+              });
+
+              const scheduledQuery = query(
+                collection(db, 'scheduledCalls'),
+                where('userId', '==', currentUser.uid)
+              );
+              const scheduledSnapshot = await getDocs(scheduledQuery);
+              scheduledSnapshot.docs.forEach((doc) => {
+                batch.delete(doc.ref);
+              });
+
+              await batch.commit();
+              
+              Alert.alert('Success', 'All call records deleted successfully');
+              fetchData();
+            } catch (error) {
+              console.error('Error deleting all call records:', error);
+              Alert.alert('Error', 'Failed to delete all call records');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -144,10 +208,18 @@ export const CallHistoryScreen: React.FC = () => {
   const renderCallHistoryItem = ({ item }: { item: PastCallItem }) => (
     <View style={styles.callItem}>
       <View style={styles.callHeader}>
-        <Text style={styles.callType}>{getTypeLabel(item.type)}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-          <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
+        <View style={styles.callInfo}>
+          <Text style={styles.callType}>{getTypeLabel(item.type)}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+            <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
+          </View>
         </View>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => deleteCallHistory(item.id, false)}
+        >
+          <Text style={styles.deleteButtonText}>Delete</Text>
+        </TouchableOpacity>
       </View>
       <Text style={styles.callDate}>
         {item.startTime.toLocaleDateString()} at {item.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -164,10 +236,18 @@ export const CallHistoryScreen: React.FC = () => {
   const renderScheduledCallItem = ({ item }: { item: ScheduledCall }) => (
     <View style={styles.callItem}>
       <View style={styles.callHeader}>
-        <Text style={styles.callType}>{getTypeLabel(item.type)}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-          <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
+        <View style={styles.callInfo}>
+          <Text style={styles.callType}>{getTypeLabel(item.type)}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+            <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
+          </View>
         </View>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => deleteCallHistory(item.id, true)}
+        >
+          <Text style={styles.deleteButtonText}>Delete</Text>
+        </TouchableOpacity>
       </View>
       <Text style={styles.callDate}>
         {item.scheduledTime.toLocaleDateString()} at {item.scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -183,6 +263,12 @@ export const CallHistoryScreen: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Call History</Text>
+        <TouchableOpacity
+          style={styles.deleteAllButton}
+          onPress={deleteAllCallHistory}
+        >
+          <Text style={styles.deleteAllButtonText}>Delete All</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
@@ -228,6 +314,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 20,
     paddingTop: 60,
     backgroundColor: 'white',
@@ -238,6 +327,17 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#2c3e50',
+  },
+  deleteAllButton: {
+    backgroundColor: '#e74c3c',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  deleteAllButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
   },
   section: {
     flex: 1,
@@ -266,10 +366,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  callInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  deleteButton: {
+    backgroundColor: '#e74c3c',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
   callType: {
     fontSize: 16,
     fontWeight: '600',
     color: '#2c3e50',
+    marginRight: 8,
   },
   statusBadge: {
     paddingHorizontal: 8,
