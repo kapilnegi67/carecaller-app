@@ -49,8 +49,8 @@ class VoiceCallService {
         throw new Error('TWILIO_PHONE_NUMBER environment variable not configured');
       }
 
-      const twimlUrl = `${process.env.BASE_URL || 'http://localhost:3001'}/api/voice/twiml/${callId}`;
-      const statusCallbackUrl = `${process.env.BASE_URL || 'http://localhost:3001'}/api/voice/status/${callId}`;
+      const twimlUrl = `${process.env.BASE_URL || 'http://carecaller-backend-prod.eba-d3mug7pe.us-east-1.elasticbeanstalk.com'}/api/voice/twiml/${callId}`;
+      const statusCallbackUrl = `${process.env.BASE_URL || 'http://carecaller-backend-prod.eba-d3mug7pe.us-east-1.elasticbeanstalk.com'}/api/voice/status/${callId}`;
 
       console.log(`TwiML URL: ${twimlUrl}`);
       console.log(`Status callback URL: ${statusCallbackUrl}`);
