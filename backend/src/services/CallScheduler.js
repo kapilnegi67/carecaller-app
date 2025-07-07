@@ -18,9 +18,16 @@ class CallScheduler {
     this.isRunning = true;
 
     this.cronJob = cron.schedule(`*/${this.pollInterval} * * * *`, async () => {
+      console.log('🔄 Cron job triggered at', new Date().toISOString());
       await this.checkScheduledCalls();
+    }, {
+      scheduled: true,
+      timezone: "UTC"
     });
 
+    console.log('✅ Cron job scheduled successfully');
+    
+    console.log('🚀 Running initial scheduled calls check...');
     this.checkScheduledCalls();
   }
 
@@ -34,7 +41,7 @@ class CallScheduler {
 
   async checkScheduledCalls() {
     try {
-      console.log('Checking for scheduled calls...');
+      console.log('🔍 Checking for scheduled calls at', new Date().toISOString());
       const now = new Date();
       
       const scheduledCallsRef = db.collection('scheduledCalls');
@@ -44,20 +51,38 @@ class CallScheduler {
         .orderBy('scheduledTime', 'asc')
         .limit(10); // Process max 10 calls at a time
 
+      console.log('📋 Executing Firebase query...');
       const snapshot = await query.get();
       
       if (snapshot.empty) {
-        console.log('No scheduled calls found');
+        console.log('✅ No scheduled calls found');
         return;
       }
 
-      console.log(`Found ${snapshot.size} scheduled calls to process`);
+      console.log(`🎯 Found ${snapshot.size} scheduled calls to process`);
+
+      snapshot.docs.forEach((doc, index) => {
+        const data = doc.data();
+        console.log(`📞 Call ${index + 1}: ID=${doc.id}, User=${data.userId}, Type=${data.type}, Scheduled=${data.scheduledTime.toDate().toISOString()}`);
+      });
 
       const promises = snapshot.docs.map(doc => this.processScheduledCall(doc));
-      await Promise.allSettled(promises);
+      const results = await Promise.allSettled(promises);
+      
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          console.log(`✅ Call ${index + 1} processed successfully`);
+        } else {
+          console.error(`❌ Call ${index + 1} failed:`, result.reason);
+        }
+      });
 
     } catch (error) {
-      console.error('Error checking scheduled calls:', error);
+      console.error('❌ Error checking scheduled calls:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack
+      });
     }
   }
 
