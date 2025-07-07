@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { collection, query, where, getDocs, updateDoc, doc, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc, addDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase.config';
 import { ScheduledCall, CallHistory } from '../types';
 
@@ -70,43 +70,44 @@ export class CallTriggerService {
     onCallTriggered: (scheduledCall: ScheduledCall, userName: string, userId: string) => void
   ): () => void {
     const subscription = Notifications.addNotificationReceivedListener(async (notification) => {
+      console.log('📞 Notification received:', notification.request.content.data);
       const { scheduledCallId, callType, userId } = notification.request.content.data || {};
 
       if (scheduledCallId && callType && userId) {
         try {
-          const scheduledCallsQuery = query(
-            collection(db, 'scheduledCalls'),
-            where('id', '==', scheduledCallId)
-          );
-          const scheduledCallsSnapshot = await getDocs(scheduledCallsQuery);
+          console.log('🔍 Looking for scheduled call:', scheduledCallId);
+          const scheduledCallDoc = await getDoc(doc(db, 'scheduledCalls', scheduledCallId as string));
 
-          if (!scheduledCallsSnapshot.empty) {
-            const scheduledCallDoc = scheduledCallsSnapshot.docs[0];
+          if (scheduledCallDoc.exists()) {
             const scheduledCall = {
               id: scheduledCallDoc.id,
               ...scheduledCallDoc.data(),
-              scheduledTime: scheduledCallDoc.data().scheduledTime.toDate(),
-              createdAt: scheduledCallDoc.data().createdAt.toDate(),
+              scheduledTime: scheduledCallDoc.data()?.scheduledTime.toDate(),
+              createdAt: scheduledCallDoc.data()?.createdAt.toDate(),
             } as ScheduledCall;
 
-            const usersQuery = query(
-              collection(db, 'users'),
-              where('id', '==', userId)
-            );
-            const usersSnapshot = await getDocs(usersQuery);
+            console.log('📞 Found scheduled call:', scheduledCall);
 
-            if (!usersSnapshot.empty) {
-              const userDoc = usersSnapshot.docs[0];
-              const userData = userDoc.data();
+            const userDoc = await getDoc(doc(db, 'users', userId as string));
+
+            if (userDoc.exists()) {
+              const userData = userDoc.data() as any;
               const userName = `${userData.firstName} ${userData.lastName}`;
+
+              console.log('👤 Found user:', userName);
 
               await updateDoc(doc(db, 'scheduledCalls', scheduledCall.id), {
                 status: 'in-progress',
                 startTime: new Date(),
               });
 
+              console.log('🚀 Triggering voice call for:', userName);
               onCallTriggered(scheduledCall, userName, scheduledCall.userId);
+            } else {
+              console.error('❌ User not found:', userId);
             }
+          } else {
+            console.error('❌ Scheduled call not found:', scheduledCallId);
           }
         } catch (error) {
           console.error('Error handling call notification:', error);
@@ -115,43 +116,44 @@ export class CallTriggerService {
     });
 
     const responseSubscription = Notifications.addNotificationResponseReceivedListener(async (response) => {
+      console.log('📞 Notification response received:', response.notification.request.content.data);
       const { scheduledCallId, callType, userId } = response.notification.request.content.data || {};
 
       if (scheduledCallId && callType && userId) {
         try {
-          const scheduledCallsQuery = query(
-            collection(db, 'scheduledCalls'),
-            where('id', '==', scheduledCallId)
-          );
-          const scheduledCallsSnapshot = await getDocs(scheduledCallsQuery);
+          console.log('🔍 Response: Looking for scheduled call:', scheduledCallId);
+          const scheduledCallDoc = await getDoc(doc(db, 'scheduledCalls', scheduledCallId as string));
 
-          if (!scheduledCallsSnapshot.empty) {
-            const scheduledCallDoc = scheduledCallsSnapshot.docs[0];
+          if (scheduledCallDoc.exists()) {
             const scheduledCall = {
               id: scheduledCallDoc.id,
               ...scheduledCallDoc.data(),
-              scheduledTime: scheduledCallDoc.data().scheduledTime.toDate(),
-              createdAt: scheduledCallDoc.data().createdAt.toDate(),
+              scheduledTime: scheduledCallDoc.data()?.scheduledTime.toDate(),
+              createdAt: scheduledCallDoc.data()?.createdAt.toDate(),
             } as ScheduledCall;
 
-            const usersQuery = query(
-              collection(db, 'users'),
-              where('id', '==', userId)
-            );
-            const usersSnapshot = await getDocs(usersQuery);
+            console.log('📞 Response: Found scheduled call:', scheduledCall);
 
-            if (!usersSnapshot.empty) {
-              const userDoc = usersSnapshot.docs[0];
-              const userData = userDoc.data();
+            const userDoc = await getDoc(doc(db, 'users', userId as string));
+
+            if (userDoc.exists()) {
+              const userData = userDoc.data() as any;
               const userName = `${userData.firstName} ${userData.lastName}`;
+
+              console.log('👤 Response: Found user:', userName);
 
               await updateDoc(doc(db, 'scheduledCalls', scheduledCall.id), {
                 status: 'in-progress',
                 startTime: new Date(),
               });
 
+              console.log('🚀 Response: Triggering voice call for:', userName);
               onCallTriggered(scheduledCall, userName, scheduledCall.userId);
+            } else {
+              console.error('❌ Response: User not found:', userId);
             }
+          } else {
+            console.error('❌ Response: Scheduled call not found:', scheduledCallId);
           }
         } catch (error) {
           console.error('Error handling call notification response:', error);

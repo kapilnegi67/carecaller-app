@@ -15,7 +15,6 @@ import { collection, addDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../../firebase.config';
 import { ScheduledCall } from '../types';
-import { CallTriggerService } from '../services/CallTriggerService';
 
 export const ScheduleCallScreen: React.FC = () => {
   const { userProfile, currentUser } = useAuth();
@@ -63,12 +62,9 @@ export const ScheduleCallScreen: React.FC = () => {
         updatedAt: new Date(),
       };
 
-      const docRef = await addDoc(collection(db, 'scheduledCalls'), newCall);
+      await addDoc(collection(db, 'scheduledCalls'), newCall);
       
-      const scheduledCallWithId = { ...newCall, id: docRef.id };
-      await CallTriggerService.scheduleCallNotification(scheduledCallWithId);
-      
-      Alert.alert('Success', 'Call scheduled successfully! You will receive a notification when it\'s time for your AI assistant call.');
+      Alert.alert('Success', 'Call scheduled successfully!');
       
       setSelectedDate(new Date());
       setSelectedTime(new Date());
@@ -152,10 +148,11 @@ export const ScheduleCallScreen: React.FC = () => {
             selectedValue={callType}
             onValueChange={(itemValue) => setCallType(itemValue)}
             style={styles.picker}
+            itemStyle={styles.pickerItem}
           >
-            <Picker.Item label="Wellness Check" value="wellness-check" />
-            <Picker.Item label="Medication Reminder" value="medication-reminder" />
-            <Picker.Item label="Social Call" value="social-call" />
+            <Picker.Item label="Wellness Check" value="wellness-check" color="#2c3e50" />
+            <Picker.Item label="Medication Reminder" value="medication-reminder" color="#2c3e50" />
+            <Picker.Item label="Social Call" value="social-call" color="#2c3e50" />
           </Picker>
         </View>
       </View>
@@ -174,12 +171,13 @@ export const ScheduleCallScreen: React.FC = () => {
               }
             }}
             style={styles.picker}
+            itemStyle={styles.pickerItem}
           >
-            <Picker.Item label="15 minutes" value={15} />
-            <Picker.Item label="30 minutes" value={30} />
-            <Picker.Item label="45 minutes" value={45} />
-            <Picker.Item label="60 minutes" value={60} />
-            <Picker.Item label="Custom minutes" value="custom" />
+            <Picker.Item label="15 minutes" value={15} color="#2c3e50" />
+            <Picker.Item label="30 minutes" value={30} color="#2c3e50" />
+            <Picker.Item label="45 minutes" value={45} color="#2c3e50" />
+            <Picker.Item label="60 minutes" value={60} color="#2c3e50" />
+            <Picker.Item label="Custom minutes" value="custom" color="#2c3e50" />
           </Picker>
         </View>
         
@@ -263,11 +261,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e1e8ed',
+    overflow: 'hidden',
+    minHeight: Platform.OS === 'android' ? 60 : 50,
+    paddingVertical: Platform.OS === 'android' ? 0 : 8,
   },
   picker: {
-    height: 50,
+    height: Platform.OS === 'android' ? 60 : 50,
     color: '#2c3e50',
     fontSize: 16,
+    backgroundColor: 'transparent',
   },
   button: {
     backgroundColor: '#27ae60',
@@ -296,5 +298,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     color: '#2c3e50',
+  },
+  pickerItem: {
+    fontSize: Platform.OS === 'android' ? 18 : 16,
+    color: '#2c3e50',
+    height: Platform.OS === 'android' ? 60 : 50,
+    fontWeight: Platform.OS === 'android' ? '500' : 'normal',
   },
 });

@@ -16,9 +16,24 @@ interface CallItem extends CallHistory {
   scheduledCall?: ScheduledCall;
 }
 
+interface PastCallItem {
+  id: string;
+  userId: string;
+  startTime: Date;
+  endTime?: Date;
+  duration?: number;
+  type: 'wellness-check' | 'medication-reminder' | 'social-call' | 'emergency';
+  status: 'completed' | 'missed' | 'no-answer' | 'scheduled' | 'cancelled';
+  notes?: string;
+  agentNotes?: string;
+  createdAt: Date;
+  scheduledTime?: Date;
+  updatedAt?: Date;
+}
+
 export const CallHistoryScreen: React.FC = () => {
   const { userProfile, currentUser } = useAuth();
-  const [callHistory, setCallHistory] = useState<CallItem[]>([]);
+  const [callHistory, setCallHistory] = useState<PastCallItem[]>([]);
   const [scheduledCalls, setScheduledCalls] = useState<ScheduledCall[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -55,8 +70,29 @@ export const CallHistoryScreen: React.FC = () => {
         updatedAt: doc.data().updatedAt.toDate(),
       })) as ScheduledCall[];
 
-      setCallHistory(historyData);
-      setScheduledCalls(scheduledData);
+      const currentTime = new Date();
+      const activeScheduledCalls = scheduledData.filter(call => 
+        call.status === 'scheduled' && call.scheduledTime > currentTime
+      );
+      
+      const pastScheduledCalls = scheduledData.filter(call => 
+        call.status !== 'scheduled' || call.scheduledTime <= currentTime
+      ).map(call => ({
+        id: call.id,
+        userId: call.userId,
+        startTime: call.scheduledTime,
+        duration: call.duration,
+        type: call.type,
+        status: call.status,
+        notes: call.notes,
+        agentNotes: call.agentNotes,
+        createdAt: call.createdAt,
+        scheduledTime: call.scheduledTime,
+        updatedAt: call.updatedAt,
+      }));
+      
+      setCallHistory([...historyData, ...pastScheduledCalls]);
+      setScheduledCalls(activeScheduledCalls);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -105,7 +141,7 @@ export const CallHistoryScreen: React.FC = () => {
     }
   };
 
-  const renderCallHistoryItem = ({ item }: { item: CallHistory }) => (
+  const renderCallHistoryItem = ({ item }: { item: PastCallItem }) => (
     <View style={styles.callItem}>
       <View style={styles.callHeader}>
         <Text style={styles.callType}>{getTypeLabel(item.type)}</Text>

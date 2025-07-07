@@ -1,9 +1,8 @@
-import React, { useEffect } from 'react';
-import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
-import { CallTriggerService } from '../services/CallTriggerService';
 
 import { useAuth } from '../contexts/AuthContext';
 import { LoginScreen } from '../screens/LoginScreen';
@@ -16,7 +15,6 @@ import { VoiceCallScreen } from '../screens/VoiceCallScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
-
 const AuthStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Login" component={LoginScreen} />
@@ -87,35 +85,16 @@ const MainTabs = () => (
   </Tab.Navigator>
 );
 
-export const navigationRef = createNavigationContainerRef();
 
 export const AppNavigator: React.FC = () => {
-  const { currentUser, loading, isNewUser, userProfile } = useAuth();
-
-  useEffect(() => {
-    if (currentUser && userProfile) {
-      const unsubscribe = CallTriggerService.setupNotificationListener(
-        (scheduledCall, userName, userId) => {
-          if (navigationRef.isReady()) {
-            (navigationRef as any).navigate('VoiceCall', {
-              scheduledCall,
-              userName,
-              userId,
-            });
-          }
-        }
-      );
-
-      return unsubscribe;
-    }
-  }, [currentUser, userProfile]);
+  const { currentUser, loading, isNewUser } = useAuth();
 
   if (loading) {
     return null;
   }
 
   return (
-    <NavigationContainer ref={navigationRef}>
+    <NavigationContainer>
       {currentUser ? (isNewUser ? <MainStack /> : <MainStack />) : <AuthStack />}
     </NavigationContainer>
   );
