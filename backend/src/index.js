@@ -63,10 +63,12 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.json({ 
     message: 'CareCaller Backend Server',
-    version: '1.0.0',
+    version: '1.0.1',
+    deployedAt: new Date().toISOString(),
     endpoints: {
       health: '/health',
-      voice: '/api/voice/*'
+      voice: '/api/voice/*',
+      debug: '/api/debug/*'
     }
   });
 });
