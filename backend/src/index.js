@@ -63,8 +63,9 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.json({ 
     message: 'CareCaller Backend Server',
-    version: '1.0.1',
+    version: '1.0.2',
     deployedAt: new Date().toISOString(),
+    forceDeployment: 'Force deployment triggered at ' + new Date().toISOString(),
     endpoints: {
       health: '/health',
       voice: '/api/voice/*',
