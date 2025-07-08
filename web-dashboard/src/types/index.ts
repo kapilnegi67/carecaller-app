@@ -23,6 +23,8 @@ export interface ScheduledCall {
   status: 'scheduled' | 'completed' | 'missed' | 'cancelled';
   notes?: string;
   agentNotes?: string;
+  twilioCallSid?: string;
+  startTime?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

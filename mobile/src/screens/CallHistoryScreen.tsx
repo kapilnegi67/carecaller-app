@@ -112,16 +112,32 @@ export const CallHistoryScreen: React.FC = () => {
   };
 
   const deleteCallHistory = async (callId: string, isScheduled: boolean = false) => {
-    try {
-      const collectionName = isScheduled ? 'scheduledCalls' : 'callHistory';
-      await deleteDoc(doc(db, collectionName, callId));
-      
-      Alert.alert('Success', 'Call record deleted successfully');
-      fetchData();
-    } catch (error) {
-      console.error('Error deleting call record:', error);
-      Alert.alert('Error', 'Failed to delete call record');
-    }
+    Alert.alert(
+      'Delete Call Record',
+      'Are you sure you want to delete this call record?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const collectionName = isScheduled ? 'scheduledCalls' : 'callHistory';
+              await deleteDoc(doc(db, collectionName, callId));
+              
+              Alert.alert('Success', 'Call record deleted successfully');
+              fetchData();
+            } catch (error) {
+              console.error('Error deleting call record:', error);
+              Alert.alert('Error', 'Failed to delete call record. Please try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const deleteAllCallHistory = async () => {
@@ -365,18 +381,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+    minHeight: 32,
   },
   callInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    marginRight: 8,
   },
   deleteButton: {
     backgroundColor: '#e74c3c',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 4,
-    marginLeft: 8,
+    minWidth: 60,
+    alignItems: 'center',
   },
   deleteButtonText: {
     color: 'white',

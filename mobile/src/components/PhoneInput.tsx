@@ -40,15 +40,24 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
 }) => {
   const getInitialCountry = () => {
     if (initialCountryCode) {
-      const country = countries.find(c => c.callingCode === initialCountryCode);
+      const country = countries.find(c => c.callingCode === initialCountryCode || c.code === initialCountryCode);
       if (country) return country;
     }
     return countries[0];
   };
 
-  const [selectedCountry, setSelectedCountry] = useState<Country>(getInitialCountry());
+  const [selectedCountry, setSelectedCountry] = useState<Country>(() => getInitialCountry());
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [searchText, setSearchText] = useState('');
+
+  React.useEffect(() => {
+    if (initialCountryCode) {
+      const country = countries.find(c => c.callingCode === initialCountryCode || c.code === initialCountryCode);
+      if (country && country.code !== selectedCountry.code) {
+        setSelectedCountry(country);
+      }
+    }
+  }, [initialCountryCode, selectedCountry.code]);
 
   const filteredCountries = countries.filter(country =>
     country.name.toLowerCase().includes(searchText.toLowerCase()) ||

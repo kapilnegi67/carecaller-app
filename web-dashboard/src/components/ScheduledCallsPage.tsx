@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Clock, Phone, User as UserIcon, Edit, Save, X } from 'lucide-react';
+import { Calendar, Clock, Phone, User as UserIcon, Edit, Save, X, Server, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 export const ScheduledCallsPage: React.FC = () => {
   const [scheduledCalls, setScheduledCalls] = useState<ScheduledCall[]>([]);
@@ -17,9 +17,12 @@ export const ScheduledCallsPage: React.FC = () => {
   const [editingCall, setEditingCall] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState('');
   const [editStatus, setEditStatus] = useState<ScheduledCall['status']>('scheduled');
+  const [backendHealth, setBackendHealth] = useState<any>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
+    fetchBackendHealth();
   }, []);
 
   const fetchData = async () => {
@@ -55,6 +58,20 @@ export const ScheduledCallsPage: React.FC = () => {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchBackendHealth = async () => {
+    setHealthLoading(true);
+    try {
+      const response = await fetch('http://carecaller-backend-prod.eba-d3mug7pe.us-east-1.elasticbeanstalk.com/health');
+      const healthData = await response.json();
+      setBackendHealth(healthData);
+    } catch (error) {
+      console.error('Error fetching backend health:', error);
+      setBackendHealth({ status: 'error', error: 'Failed to connect to backend' });
+    } finally {
+      setHealthLoading(false);
     }
   };
 
@@ -119,6 +136,34 @@ export const ScheduledCallsPage: React.FC = () => {
     return scheduledTime > new Date();
   };
 
+  const getBackendStatusIcon = (call: ScheduledCall) => {
+    const now = new Date();
+    const isOverdue = call.scheduledTime <= now && call.status === 'scheduled';
+    
+    if (call.twilioCallSid) {
+      return <CheckCircle className="h-4 w-4 text-green-600" />;
+    } else if (isOverdue) {
+      return <XCircle className="h-4 w-4 text-red-600" />;
+    } else if (call.status === 'scheduled') {
+      return <AlertCircle className="h-4 w-4 text-yellow-600" />;
+    }
+    return <Server className="h-4 w-4 text-gray-400" />;
+  };
+
+  const getBackendStatusText = (call: ScheduledCall) => {
+    const now = new Date();
+    const isOverdue = call.scheduledTime <= now && call.status === 'scheduled';
+    
+    if (call.twilioCallSid) {
+      return `Processed (SID: ${call.twilioCallSid.substring(0, 10)}...)`;
+    } else if (isOverdue) {
+      return 'Overdue - Not Processed';
+    } else if (call.status === 'scheduled') {
+      return 'Pending Processing';
+    }
+    return 'No Backend Status';
+  };
+
   if (loading) {
     return (
       <Card>
@@ -142,7 +187,24 @@ export const ScheduledCallsPage: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900">Scheduled Calls</h2>
           <p className="text-gray-600">Manage and track all scheduled calls</p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 items-center">
+          <div className="flex items-center space-x-2 mr-4">
+            {healthLoading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            ) : backendHealth?.status === 'healthy' ? (
+              <CheckCircle className="h-4 w-4 text-green-600" />
+            ) : (
+              <XCircle className="h-4 w-4 text-red-600" />
+            )}
+            <span className="text-sm text-gray-600">
+              Backend: {backendHealth?.status || 'Unknown'}
+            </span>
+            {backendHealth?.scheduler && (
+              <span className="text-xs text-gray-500">
+                (Scheduler: {backendHealth.scheduler.running ? 'Running' : 'Stopped'})
+              </span>
+            )}
+          </div>
           <Badge variant="secondary" className="px-3 py-1">
             {upcomingCalls.length} Upcoming
           </Badge>
@@ -208,6 +270,19 @@ export const ScheduledCallsPage: React.FC = () => {
                         <p className="text-blue-600">{call.agentNotes}</p>
                       </div>
                     )}
+
+                    <div className="bg-gray-50 p-2 rounded text-sm">
+                      <div className="flex items-center space-x-2">
+                        {getBackendStatusIcon(call)}
+                        <span className="font-medium text-gray-700">Backend Status:</span>
+                      </div>
+                      <p className="text-gray-600 mt-1">{getBackendStatusText(call)}</p>
+                      {call.startTime && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Last Updated: {call.updatedAt?.toLocaleString() || 'Unknown'}
+                        </p>
+                      )}
+                    </div>
 
                     <div className="pt-2 border-t">
                       {editingCall === call.id ? (
@@ -306,6 +381,19 @@ export const ScheduledCallsPage: React.FC = () => {
                         <p className="text-blue-600">{call.agentNotes}</p>
                       </div>
                     )}
+
+                    <div className="bg-gray-50 p-2 rounded text-sm">
+                      <div className="flex items-center space-x-2">
+                        {getBackendStatusIcon(call)}
+                        <span className="font-medium text-gray-700">Backend Status:</span>
+                      </div>
+                      <p className="text-gray-600 mt-1">{getBackendStatusText(call)}</p>
+                      {call.updatedAt && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Last Updated: {call.updatedAt.toLocaleString()}
+                        </p>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               );
