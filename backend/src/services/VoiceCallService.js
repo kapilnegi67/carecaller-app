@@ -93,16 +93,41 @@ class VoiceCallService {
     let greeting = '';
     switch (callType) {
       case 'wellness-check':
-        greeting = `Hello ${userName}, this is your AI wellness assistant calling for your scheduled wellness check. How are you feeling today?`;
+        const wellnessGreetings = [
+          `Hello ${userName}, this is your AI wellness assistant calling for your scheduled wellness check. How are you feeling today?`,
+          `Hi ${userName}, it's your wellness companion checking in. How has your health been lately?`,
+          `Hello ${userName}, this is your AI health assistant. I hope you're doing well today - how are you feeling?`,
+          `Hi there ${userName}, your wellness assistant here for our scheduled check-in. How are things going with your health?`
+        ];
+        greeting = wellnessGreetings[Math.floor(Math.random() * wellnessGreetings.length)];
         break;
       case 'medication-reminder':
-        greeting = `Hello ${userName}, this is your AI assistant calling to remind you about your medication. Have you taken your prescribed medication today?`;
+        const medicationGreetings = [
+          `Hello ${userName}, this is your AI assistant calling to remind you about your medication. Have you taken your prescribed medication today?`,
+          `Hi ${userName}, it's your medication reminder assistant. How are you doing with your medications today?`,
+          `Hello ${userName}, this is your AI health companion checking in about your medications. Have you taken them as prescribed?`,
+          `Hi there ${userName}, your medication assistant here. I wanted to check in about your daily medications - how are you managing?`
+        ];
+        greeting = medicationGreetings[Math.floor(Math.random() * medicationGreetings.length)];
         break;
       case 'social-call':
-        greeting = `Hello ${userName}, this is your AI companion calling for our scheduled chat. I hope you're having a wonderful day! How has your day been so far? Please tell me what's been happening in your life.`;
+        const socialGreetings = [
+          `Hello ${userName}, this is your AI companion calling for our scheduled chat. I hope you're having a wonderful day! What's been going on in your world lately?`,
+          `Hi ${userName}, it's your friendly AI calling to catch up. How has your day been treating you?`,
+          `Hello there ${userName}, your AI friend here for our regular chat. What's new and exciting in your life?`,
+          `Hi ${userName}, this is your AI companion checking in. I'd love to hear how things have been going for you!`,
+          `Hello ${userName}, it's your AI buddy calling for our chat time. What's been happening since we last talked?`
+        ];
+        greeting = socialGreetings[Math.floor(Math.random() * socialGreetings.length)];
         break;
       default:
-        greeting = `Hello ${userName}, this is your AI assistant calling for your scheduled appointment. How can I help you today?`;
+        const defaultGreetings = [
+          `Hello ${userName}, this is your AI assistant calling for your scheduled appointment. How can I help you today?`,
+          `Hi ${userName}, it's your AI assistant here for our scheduled call. What can I assist you with?`,
+          `Hello there ${userName}, your AI helper calling as scheduled. How may I support you today?`,
+          `Hi ${userName}, this is your AI assistant checking in. What would you like to discuss today?`
+        ];
+        greeting = defaultGreetings[Math.floor(Math.random() * defaultGreetings.length)];
     }
 
     twiml.say({
@@ -144,15 +169,37 @@ class VoiceCallService {
         console.log(`🚨 FALLBACK: User said: "${speechResult}" for ${callType} call`);
         
         const simulatedResponses = {
-          'wellness-check': `I'm glad to hear from you, ${userName}. It sounds like you're doing well today. Is there anything specific about your health you'd like to discuss?`,
-          'medication-reminder': `Thank you for letting me know about your medication, ${userName}. It's important to stay on track with your prescribed treatments. How are you feeling today?`,
-          'social-call': `That's wonderful to hear, ${userName}! I really enjoy our conversations. What's been the highlight of your day so far?`,
-          'default': `I understand, ${userName}. Thank you for sharing that with me. What else would you like to talk about today?`
+          'wellness-check': [
+            `I'm glad to hear from you, ${userName}. It sounds like you're doing well today. Is there anything specific about your health you'd like to discuss?`,
+            `Thank you for sharing that with me, ${userName}. Your health is important to me. What else would you like to talk about regarding your wellbeing?`,
+            `That's good to know, ${userName}. I appreciate you keeping me updated. How are you feeling overall today?`,
+            `I understand, ${userName}. It's great that we can check in like this. Is there anything else about your health on your mind?`
+          ],
+          'medication-reminder': [
+            `Thank you for letting me know about your medication, ${userName}. It's important to stay on track with your prescribed treatments. How are you feeling today?`,
+            `I appreciate the update, ${userName}. Staying consistent with medications is so important. How has your day been otherwise?`,
+            `That's helpful to know, ${userName}. I'm glad we can keep track of this together. What else is going on with you today?`,
+            `Thanks for sharing that with me, ${userName}. Your health management is really important. How are you feeling overall?`
+          ],
+          'social-call': [
+            `That sounds really interesting, ${userName}! I'd love to hear more about what's been keeping you busy lately.`,
+            `Oh that's wonderful, ${userName}! What's been the best part of your day so far?`,
+            `That's great to hear, ${userName}! I always enjoy learning about what you've been up to. What else has been happening?`,
+            `How nice, ${userName}! It sounds like you've had some good experiences. What's been on your mind recently?`,
+            `That's lovely, ${userName}! I'm always curious about your adventures. What's been surprising you lately?`
+          ],
+          'default': [
+            `I understand, ${userName}. Thank you for sharing that with me. What else would you like to talk about today?`,
+            `That makes sense, ${userName}. I appreciate you telling me about that. What's been on your mind lately?`,
+            `I see, ${userName}. Thanks for letting me know. Is there anything else you'd like to discuss?`,
+            `That's interesting, ${userName}. I'm glad you shared that with me. What else has been happening in your life?`
+          ]
         };
         
-        const baseResponse = simulatedResponses[callType] || simulatedResponses['default'];
+        const responseArray = simulatedResponses[callType] || simulatedResponses['default'];
+        const randomResponse = responseArray[Math.floor(Math.random() * responseArray.length)];
         const timestamp = Date.now();
-        const response = `${baseResponse} [Simulated response ${timestamp}]`;
+        const response = `${randomResponse} [Simulated response ${timestamp}]`;
         if (callId) {
           await this.saveConversationTurn(callId, speechResult, response);
         }
@@ -166,7 +213,7 @@ class VoiceCallService {
       
       const messages = [
         { role: "system", content: systemPrompt },
-        ...conversationHistory.slice(-3).flatMap(turn => [
+        ...conversationHistory.slice(-5).flatMap(turn => [
           { role: "user", content: turn.user },
           { role: "assistant", content: turn.ai }
         ]),
@@ -176,10 +223,10 @@ class VoiceCallService {
       const completion = await this.openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: messages,
-        max_tokens: isGoodbye ? 40 : 100,
-        temperature: 1.0,
-        presence_penalty: 1.0,
-        frequency_penalty: 0.9,
+        max_tokens: isGoodbye ? 40 : 120,
+        temperature: 1.2,
+        presence_penalty: 1.2,
+        frequency_penalty: 1.0,
         stream: false
       });
 
