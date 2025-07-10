@@ -77,16 +77,18 @@ router.post('/respond', async (req, res) => {
 
     const gather = twiml.gather({
       input: 'speech',
-      timeout: 3,
+      timeout: 5,
       speechTimeout: 'auto',
       action: '/api/voice/respond',
       method: 'POST'
     });
 
+    gather.pause({ length: 1 });
+
     twiml.say({
       voice: 'Polly.Joanna-Neural',
       language: 'en-US'
-    }, 'Thank you for talking with me today. Take care and have a wonderful day!');
+    }, 'Thank you for our wonderful conversation today. Take care and have a great day!');
 
     twiml.hangup();
 

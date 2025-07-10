@@ -156,6 +156,8 @@ class VoiceCallService {
       const conversationHistory = callId ? await this.getConversationHistory(callId) : [];
       const systemPrompt = this.getSystemPrompt(callType, userName, conversationHistory);
       
+      const isGoodbye = this.detectGoodbyeIntent(speechResult);
+      
       const messages = [
         { role: "system", content: systemPrompt },
         ...conversationHistory.slice(-3).flatMap(turn => [
@@ -168,7 +170,7 @@ class VoiceCallService {
       const completion = await this.openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: messages,
-        max_tokens: 80,
+        max_tokens: isGoodbye ? 40 : 80,
         temperature: 0.9,
         presence_penalty: 0.8,
         frequency_penalty: 0.5,
@@ -194,6 +196,11 @@ class VoiceCallService {
     }
   }
 
+  detectGoodbyeIntent(message) {
+    const goodbyeKeywords = ['goodbye', 'bye', 'gotta go', 'have to go', 'talk later', 'see you', 'thanks for', 'that\'s all', 'nothing else', 'i\'m done'];
+    return goodbyeKeywords.some(keyword => message.toLowerCase().includes(keyword));
+  }
+
   getSystemPrompt(callType, userName = '', conversationHistory = []) {
     let basePrompt = "";
     
@@ -208,7 +215,7 @@ class VoiceCallService {
         basePrompt = `You are a warm, caring AI companion having a natural conversation with ${userName || 'your friend'}. You're genuinely interested in their life and experiences.
 
 CRITICAL RULES:
-- Keep responses under 100 characters including your follow-up question
+- Keep responses under 120 characters including your follow-up question
 - NEVER repeat the same response twice - be creative and varied
 - ALWAYS end with a different follow-up question based on what they share
 - Reference specific details they mention in your responses
@@ -218,6 +225,7 @@ CRITICAL RULES:
 - If they mention something specific (work, family, hobbies), ask about it
 - Be encouraging and positive but authentic, not overly cheerful
 - MUST include a natural follow-up question in every response
+- If they seem to be saying goodbye, give a warm but brief farewell
 
 ${conversationHistory.length > 0 ? `Previous conversation: ${conversationHistory.slice(-3).map(h => `User: ${h.user} | AI: ${h.ai}`).join(' | ')}` : ''}
 
@@ -226,8 +234,9 @@ Examples of good responses:
 - "I'm glad to hear that. How did that make you feel?"
 - "That's interesting! Tell me more about your work."
 - "Sounds like you're busy! What are you looking forward to?"
+- "I really enjoyed talking with you! What's one thing you're excited about this week?"
 
-Remember: Each response should be unique, include a reaction to what they said, and end with a contextual follow-up question.`;
+Remember: Each response should be unique, include a reaction to what they said, and end with a contextual follow-up question. If they're ending the conversation, be warm but concise.`;
         break;
       default:
         basePrompt = "You are a caring AI assistant. Be empathetic, supportive, and keep responses under 100 characters including a follow-up question. Provide general support and assistance based on what the person shares with you. Always end with a relevant follow-up question.";
