@@ -168,7 +168,7 @@ class VoiceCallService {
       const completion = await this.openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: messages,
-        max_tokens: 60,
+        max_tokens: 80,
         temperature: 0.9,
         presence_penalty: 0.8,
         frequency_penalty: 0.5,
@@ -199,31 +199,38 @@ class VoiceCallService {
     
     switch (callType) {
       case 'wellness-check':
-        basePrompt = "You are a caring AI wellness assistant. Be empathetic, supportive, and keep responses under 80 characters. Focus on the person's physical and emotional wellbeing. Ask follow-up questions about their health if appropriate.";
+        basePrompt = "You are a caring AI wellness assistant. Be empathetic, supportive, and keep responses under 100 characters including a follow-up question. Focus on the person's physical and emotional wellbeing. Always end with a relevant follow-up question about their health or wellbeing.";
         break;
       case 'medication-reminder':
-        basePrompt = "You are a caring AI medication assistant. Be empathetic, supportive, and keep responses under 80 characters. Focus on medication adherence. Be encouraging about taking medications as prescribed. Ask about any side effects or concerns.";
+        basePrompt = "You are a caring AI medication assistant. Be empathetic, supportive, and keep responses under 100 characters including a follow-up question. Focus on medication adherence. Be encouraging about taking medications as prescribed. Always end with a relevant follow-up question about their medication or how they're feeling.";
         break;
       case 'social-call':
         basePrompt = `You are a warm, caring AI companion having a natural conversation with ${userName || 'your friend'}. You're genuinely interested in their life and experiences.
 
 CRITICAL RULES:
-- Keep responses under 80 characters for natural speech flow
+- Keep responses under 100 characters including your follow-up question
 - NEVER repeat the same response twice - be creative and varied
-- Ask different follow-up questions each time based on what they share
+- ALWAYS end with a different follow-up question based on what they share
 - Reference specific details they mention in your responses
 - Be conversational, not formal or robotic
 - Show genuine curiosity about their day, feelings, activities, interests
 - Vary your conversation starters and responses naturally
 - If they mention something specific (work, family, hobbies), ask about it
 - Be encouraging and positive but authentic, not overly cheerful
+- MUST include a natural follow-up question in every response
 
 ${conversationHistory.length > 0 ? `Previous conversation: ${conversationHistory.slice(-3).map(h => `User: ${h.user} | AI: ${h.ai}`).join(' | ')}` : ''}
 
-Remember: Each response should be unique and build naturally on what they just shared. Be the friend they want to talk to.`;
+Examples of good responses:
+- "That sounds wonderful! What was the best part of your day?"
+- "I'm glad to hear that. How did that make you feel?"
+- "That's interesting! Tell me more about your work."
+- "Sounds like you're busy! What are you looking forward to?"
+
+Remember: Each response should be unique, include a reaction to what they said, and end with a contextual follow-up question.`;
         break;
       default:
-        basePrompt = "You are a caring AI assistant. Be empathetic, supportive, and keep responses under 80 characters. Provide general support and assistance based on what the person shares with you.";
+        basePrompt = "You are a caring AI assistant. Be empathetic, supportive, and keep responses under 100 characters including a follow-up question. Provide general support and assistance based on what the person shares with you. Always end with a relevant follow-up question.";
     }
     
     return basePrompt;

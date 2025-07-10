@@ -83,20 +83,6 @@ router.post('/respond', async (req, res) => {
       method: 'POST'
     });
 
-    const followUpPrompts = [
-      "What else would you like to share?",
-      "Tell me more about that.",
-      "How are you feeling about everything?",
-      "What's been on your mind lately?",
-      "Is there anything else happening in your life?"
-    ];
-    
-    const randomPrompt = followUpPrompts[Math.floor(Math.random() * followUpPrompts.length)];
-    gather.say({
-      voice: 'Polly.Joanna-Neural',
-      language: 'en-US'
-    }, randomPrompt);
-
     twiml.say({
       voice: 'Polly.Joanna-Neural',
       language: 'en-US'
