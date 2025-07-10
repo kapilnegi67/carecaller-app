@@ -51,36 +51,60 @@ router.post('/respond', async (req, res) => {
 
     const callDoc = callsQuery.docs[0];
     const callData = callDoc.data();
+    const callId = callDoc.id;
 
-    const aiResponse = await VoiceCallService.processUserResponse(SpeechResult, callData.type);
+    const userDoc = await db.collection('users').doc(callData.userId).get();
+    const userData = userDoc.data();
+    const userName = `${userData.firstName} ${userData.lastName}`;
+
+    const aiResponse = await VoiceCallService.processUserResponse(
+      SpeechResult,
+      callData.type,
+      callId,
+      userName
+    );
 
     const twilio = require('twilio');
     const twiml = new twilio.twiml.VoiceResponse();
-    
+
     twiml.say({
-      voice: 'alice',
+      voice: 'Polly.Joanna-Neural',
       language: 'en-US'
     }, aiResponse);
 
-    const gather = twiml.gather({
-      input: 'speech',
-      timeout: 10,
-      speechTimeout: 'auto',
-      action: '/api/voice/respond',
-      method: 'POST'
-    });
-
-    gather.say({
-      voice: 'alice',
-      language: 'en-US'
-    }, 'Is there anything else you\'d like to talk about?');
-
-    twiml.say({
-      voice: 'alice',
-      language: 'en-US'
-    }, 'Thank you for talking with me today. Take care and have a wonderful day!');
+    const isGoodbye = VoiceCallService.detectGoodbyeIntent(SpeechResult || '');
     
-    twiml.hangup();
+    if (!isGoodbye) {
+      const gather = twiml.gather({
+        input: 'speech',
+        timeout: 10,
+        speechTimeout: 'auto',
+        action: '/api/voice/respond',
+        method: 'POST'
+      });
+
+      gather.pause({ length: 1 });
+      
+      twiml.say({
+        voice: 'Polly.Joanna-Neural',
+        language: 'en-US'
+      }, 'I didn\'t hear anything. Thank you for our conversation today. Take care!');
+      twiml.hangup();
+    } else {
+      const goodbyeMessages = [
+        'Thank you for our wonderful conversation today. Take care and have a great day!',
+        'It was lovely talking with you. Have a fantastic rest of your day!',
+        'I really enjoyed our chat. Take care and talk to you soon!',
+        'Thanks for sharing with me today. Wishing you all the best!'
+      ];
+      const randomGoodbye = goodbyeMessages[Math.floor(Math.random() * goodbyeMessages.length)];
+      
+      twiml.say({
+        voice: 'Polly.Joanna-Neural',
+        language: 'en-US'
+      }, randomGoodbye);
+      twiml.hangup();
+    }
 
     res.type('text/xml');
     res.send(twiml.toString());
@@ -90,7 +114,10 @@ router.post('/respond', async (req, res) => {
     
     const twilio = require('twilio');
     const twiml = new twilio.twiml.VoiceResponse();
-    twiml.say('Thank you for your time. Have a great day!');
+    twiml.say({
+      voice: 'Polly.Joanna-Neural',
+      language: 'en-US'
+    }, 'Thank you for your time. Have a great day!');
     twiml.hangup();
     
     res.type('text/xml');
