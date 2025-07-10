@@ -6,31 +6,31 @@ const { db } = require('../config/firebase');
 router.post('/twiml/:callId', async (req, res) => {
   try {
     const { callId } = req.params;
-    
+
     const callDoc = await db.collection('scheduledCalls').doc(callId).get();
     if (!callDoc.exists) {
       throw new Error('Call not found');
     }
 
     const callData = callDoc.data();
-    
+
     const userDoc = await db.collection('users').doc(callData.userId).get();
     const userData = userDoc.data();
     const userName = `${userData.firstName} ${userData.lastName}`;
 
     const twiml = VoiceCallService.generateTwiML(callData.type, userName);
-    
+
     res.type('text/xml');
     res.send(twiml);
 
   } catch (error) {
     console.error('Error generating TwiML:', error);
-    
+
     const twilio = require('twilio');
     const twiml = new twilio.twiml.VoiceResponse();
     twiml.say('Sorry, there was an error with your call. Please try again later.');
     twiml.hangup();
-    
+
     res.type('text/xml');
     res.send(twiml.toString());
   }
@@ -39,7 +39,7 @@ router.post('/twiml/:callId', async (req, res) => {
 router.post('/respond', async (req, res) => {
   try {
     const { SpeechResult, CallSid } = req.body;
-    
+
     const callsQuery = await db.collection('scheduledCalls')
       .where('twilioCallSid', '==', CallSid)
       .limit(1)
@@ -58,15 +58,15 @@ router.post('/respond', async (req, res) => {
     const userName = `${userData.firstName} ${userData.lastName}`;
 
     const aiResponse = await VoiceCallService.processUserResponse(
-      SpeechResult, 
-      callData.type, 
-      callId, 
+      SpeechResult,
+      callData.type,
+      callId,
       userName
     );
 
     const twilio = require('twilio');
     const twiml = new twilio.twiml.VoiceResponse();
-    
+
     twiml.say({
       voice: 'alice',
       language: 'en-US'
@@ -89,7 +89,7 @@ router.post('/respond', async (req, res) => {
       voice: 'alice',
       language: 'en-US'
     }, 'Thank you for talking with me today. Take care and have a wonderful day!');
-    
+
     twiml.hangup();
 
     res.type('text/xml');
@@ -97,12 +97,12 @@ router.post('/respond', async (req, res) => {
 
   } catch (error) {
     console.error('Error processing voice response:', error);
-    
+
     const twilio = require('twilio');
     const twiml = new twilio.twiml.VoiceResponse();
     twiml.say('Thank you for your time. Have a great day!');
     twiml.hangup();
-    
+
     res.type('text/xml');
     res.send(twiml.toString());
   }
@@ -124,7 +124,7 @@ router.post('/status/:callId', async (req, res) => {
     const callData = callDoc.data();
 
     const updateData = {
-      status: CallStatus === 'completed' ? 'completed' : 
+      status: CallStatus === 'completed' ? 'completed' :
               CallStatus === 'no-answer' ? 'no-answer' :
               CallStatus === 'busy' ? 'missed' : 'in-progress',
       updatedAt: new Date()
