@@ -119,10 +119,18 @@ class VoiceCallService {
     });
 
 
+    const timeoutMessages = [
+      'I didn\'t catch that. Feel free to call back anytime if you\'d like to chat!',
+      'No worries if you\'re busy. Have a wonderful day and talk soon!',
+      'I\'ll let you go for now. Take care and call back whenever you\'d like!',
+      'Seems like you might be away. Have a great day and we\'ll talk later!'
+    ];
+    const randomTimeout = timeoutMessages[Math.floor(Math.random() * timeoutMessages.length)];
+    
     twiml.say({
       voice: 'Polly.Joanna-Neural',
       language: 'en-US'
-    }, 'I didn\'t hear a response. Please call us back if you need assistance. Take care!');
+    }, randomTimeout);
 
     twiml.hangup();
 
