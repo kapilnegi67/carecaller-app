@@ -51,8 +51,18 @@ router.post('/respond', async (req, res) => {
 
     const callDoc = callsQuery.docs[0];
     const callData = callDoc.data();
+    const callId = callDoc.id;
 
-    const aiResponse = await VoiceCallService.processUserResponse(SpeechResult, callData.type);
+    const userDoc = await db.collection('users').doc(callData.userId).get();
+    const userData = userDoc.data();
+    const userName = `${userData.firstName} ${userData.lastName}`;
+
+    const aiResponse = await VoiceCallService.processUserResponse(
+      SpeechResult, 
+      callData.type, 
+      callId, 
+      userName
+    );
 
     const twilio = require('twilio');
     const twiml = new twilio.twiml.VoiceResponse();
@@ -64,7 +74,7 @@ router.post('/respond', async (req, res) => {
 
     const gather = twiml.gather({
       input: 'speech',
-      timeout: 10,
+      timeout: 5,
       speechTimeout: 'auto',
       action: '/api/voice/respond',
       method: 'POST'

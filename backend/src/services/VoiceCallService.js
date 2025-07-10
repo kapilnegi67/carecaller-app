@@ -1,5 +1,6 @@
 const twilio = require('twilio');
 const OpenAI = require('openai');
+const { db } = require('../config/firebase');
 
 class VoiceCallService {
   constructor() {
@@ -111,7 +112,7 @@ class VoiceCallService {
 
     const gather = twiml.gather({
       input: 'speech',
-      timeout: 10,
+      timeout: 5,
       speechTimeout: 'auto',
       action: '/api/voice/respond',
       method: 'POST'
@@ -132,7 +133,7 @@ class VoiceCallService {
     return twiml.toString();
   }
 
-  async processUserResponse(speechResult, callType) {
+  async processUserResponse(speechResult, callType, callId, userName) {
     try {
       if (!this.openai) {
         console.log('🎭 SIMULATED: OpenAI response would be generated (API key not configured)');
@@ -145,17 +146,28 @@ class VoiceCallService {
           'default': "I understand. Thank you for sharing that with me. Is there anything else I can help you with today?"
         };
         
-        return simulatedResponses[callType] || simulatedResponses['default'];
+        const response = simulatedResponses[callType] || simulatedResponses['default'];
+        if (callId) {
+          await this.saveConversationTurn(callId, speechResult, response);
+        }
+        return response;
       }
 
-      const systemPrompt = this.getSystemPrompt(callType);
+      const conversationHistory = callId ? await this.getConversationHistory(callId) : [];
+      const systemPrompt = this.getSystemPrompt(callType, userName, conversationHistory);
+      
+      const messages = [
+        { role: "system", content: systemPrompt },
+        ...conversationHistory.slice(-3).flatMap(turn => [
+          { role: "user", content: turn.user },
+          { role: "assistant", content: turn.ai }
+        ]),
+        { role: "user", content: speechResult }
+      ];
       
       const completion = await this.openai.chat.completions.create({
         model: "gpt-3.5-turbo",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: speechResult }
-        ],
+        messages: messages,
         max_tokens: 150,
         temperature: 0.7
       });
@@ -163,26 +175,98 @@ class VoiceCallService {
       const aiResponse = completion.choices[0].message.content;
       console.log(`AI Response: ${aiResponse}`);
 
+      if (callId) {
+        await this.saveConversationTurn(callId, speechResult, aiResponse);
+      }
+
       return aiResponse;
 
     } catch (error) {
       console.error('Error processing user response with OpenAI:', error);
-      return "I understand. Thank you for sharing that with me. Is there anything else I can help you with today?";
+      const fallbackResponse = "I understand. Thank you for sharing that with me. Is there anything else I can help you with today?";
+      if (callId) {
+        await this.saveConversationTurn(callId, speechResult, fallbackResponse);
+      }
+      return fallbackResponse;
     }
   }
 
-  getSystemPrompt(callType) {
-    const basePrompt = "You are a caring AI assistant making a wellness call. Be empathetic, supportive, and keep responses under 150 characters. ";
+  getSystemPrompt(callType, userName = '', conversationHistory = []) {
+    let basePrompt = "";
     
     switch (callType) {
       case 'wellness-check':
-        return basePrompt + "Focus on the person's physical and emotional wellbeing. Ask follow-up questions about their health if appropriate.";
+        basePrompt = "You are a caring AI wellness assistant. Be empathetic, supportive, and keep responses under 150 characters. Focus on the person's physical and emotional wellbeing. Ask follow-up questions about their health if appropriate.";
+        break;
       case 'medication-reminder':
-        return basePrompt + "Focus on medication adherence. Be encouraging about taking medications as prescribed. Ask about any side effects or concerns.";
+        basePrompt = "You are a caring AI medication assistant. Be empathetic, supportive, and keep responses under 150 characters. Focus on medication adherence. Be encouraging about taking medications as prescribed. Ask about any side effects or concerns.";
+        break;
       case 'social-call':
-        return basePrompt + "Focus on providing companionship and social interaction. Be friendly and engaging. Ask about their day, interests, or activities.";
+        basePrompt = `You are a realtime AI companion speaking on behalf of the user for a social call. You are warm, friendly, and engaging. Act as a natural conversational partner who genuinely cares about the person you're talking to. 
+
+Key behaviors:
+- Be conversational and natural, not robotic or formal
+- Show genuine interest in what they share
+- Ask follow-up questions about their interests, activities, and experiences
+- Share appropriate responses that show you're listening and engaged
+- Keep responses under 150 characters for natural speech flow
+- Remember details they mention and reference them naturally
+- Be encouraging and positive while being authentic
+- Adapt your conversation style to match their energy and interests
+
+${userName ? `You are speaking with ${userName}.` : ''}
+${conversationHistory.length > 0 ? `Previous conversation context: ${conversationHistory.slice(-3).map(h => `${h.role}: ${h.content}`).join(' | ')}` : ''}
+
+Focus on providing genuine companionship and social interaction. Be the kind of friend they'd want to talk to.`;
+        break;
       default:
-        return basePrompt + "Provide general support and assistance based on what the person shares with you.";
+        basePrompt = "You are a caring AI assistant. Be empathetic, supportive, and keep responses under 150 characters. Provide general support and assistance based on what the person shares with you.";
+    }
+    
+    return basePrompt;
+  }
+
+  async getConversationHistory(callId) {
+    try {
+      const conversationDoc = await db.collection('conversationHistory').doc(callId).get();
+      if (conversationDoc.exists) {
+        return conversationDoc.data().messages || [];
+      }
+      return [];
+    } catch (error) {
+      console.error('Error getting conversation history:', error);
+      return [];
+    }
+  }
+
+  async saveConversationTurn(callId, userMessage, aiResponse) {
+    try {
+      const conversationRef = db.collection('conversationHistory').doc(callId);
+      const conversationDoc = await conversationRef.get();
+      
+      const newTurn = {
+        timestamp: new Date(),
+        user: userMessage,
+        ai: aiResponse
+      };
+
+      if (conversationDoc.exists) {
+        const existingMessages = conversationDoc.data().messages || [];
+        const updatedMessages = [...existingMessages, newTurn].slice(-5);
+        await conversationRef.update({ 
+          messages: updatedMessages,
+          updatedAt: new Date()
+        });
+      } else {
+        await conversationRef.set({
+          callId,
+          messages: [newTurn],
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+    } catch (error) {
+      console.error('Error saving conversation turn:', error);
     }
   }
 }
