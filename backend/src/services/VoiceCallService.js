@@ -132,8 +132,8 @@ class VoiceCallService {
   async processUserResponse(speechResult, callType, callId, userName) {
     try {
       if (!this.openai) {
-        console.log('🎭 SIMULATED: OpenAI response would be generated (API key not configured)');
-        console.log(`🎭 SIMULATED: User said: "${speechResult}" for ${callType} call`);
+        console.log('🚨 FALLBACK: Using simulated OpenAI response (API key not configured)');
+        console.log(`🚨 FALLBACK: User said: "${speechResult}" for ${callType} call`);
         
         const simulatedResponses = {
           'wellness-check': `I'm glad to hear from you, ${userName}. It sounds like you're doing well today. Is there anything specific about your health you'd like to discuss?`,
@@ -176,7 +176,7 @@ class VoiceCallService {
       });
 
       const aiResponse = completion.choices[0].message.content;
-      console.log(`AI Response: ${aiResponse}`);
+      console.log(`✅ OpenAI API Success - AI Response: ${aiResponse}`);
 
       if (callId) {
         await this.saveConversationTurn(callId, speechResult, aiResponse);
@@ -185,8 +185,9 @@ class VoiceCallService {
       return aiResponse;
 
     } catch (error) {
-      console.error('Error processing user response with OpenAI:', error);
-      const fallbackResponse = "I understand. Thank you for sharing that with me. Is there anything else I can help you with today?";
+      console.error('🚨 ERROR: OpenAI API failed, using fallback response:', error);
+      const timestamp = Date.now();
+      const fallbackResponse = `I understand. Thank you for sharing that with me. What else would you like to talk about? [Fallback ${timestamp}]`;
       if (callId) {
         await this.saveConversationTurn(callId, speechResult, fallbackResponse);
       }
