@@ -99,7 +99,7 @@ class VoiceCallService {
         greeting = `Hello ${userName}, this is your AI assistant calling to remind you about your medication. Have you taken your prescribed medication today?`;
         break;
       case 'social-call':
-        greeting = `Hello ${userName}, this is your AI companion calling for our scheduled chat. I hope you're having a wonderful day! How has your day been so far?`;
+        greeting = `Hello ${userName}, this is your AI companion calling for our scheduled chat. I hope you're having a wonderful day! How has your day been so far? Please tell me what's been happening in your life.`;
         break;
       default:
         greeting = `Hello ${userName}, this is your AI assistant calling for your scheduled appointment. How can I help you today?`;
@@ -118,10 +118,6 @@ class VoiceCallService {
       method: 'POST'
     });
 
-    gather.say({
-      voice: 'Polly.Joanna-Neural',
-      language: 'en-US'
-    }, 'Please tell me how you\'re doing, and I\'ll be here to listen and help.');
 
     twiml.say({
       voice: 'Polly.Joanna-Neural',
@@ -140,13 +136,15 @@ class VoiceCallService {
         console.log(`🎭 SIMULATED: User said: "${speechResult}" for ${callType} call`);
         
         const simulatedResponses = {
-          'wellness-check': "I'm glad to hear from you. It sounds like you're doing well today. Is there anything specific about your health you'd like to discuss?",
-          'medication-reminder': "Thank you for letting me know about your medication. It's important to stay on track with your prescribed treatments.",
-          'social-call': "That's wonderful to hear! I enjoy our conversations. Tell me more about what's been happening in your day.",
-          'default': "I understand. Thank you for sharing that with me. Is there anything else I can help you with today?"
+          'wellness-check': `I'm glad to hear from you, ${userName}. It sounds like you're doing well today. Is there anything specific about your health you'd like to discuss?`,
+          'medication-reminder': `Thank you for letting me know about your medication, ${userName}. It's important to stay on track with your prescribed treatments. How are you feeling today?`,
+          'social-call': `That's wonderful to hear, ${userName}! I really enjoy our conversations. What's been the highlight of your day so far?`,
+          'default': `I understand, ${userName}. Thank you for sharing that with me. What else would you like to talk about today?`
         };
         
-        const response = simulatedResponses[callType] || simulatedResponses['default'];
+        const baseResponse = simulatedResponses[callType] || simulatedResponses['default'];
+        const timestamp = Date.now();
+        const response = `${baseResponse} [Simulated response ${timestamp}]`;
         if (callId) {
           await this.saveConversationTurn(callId, speechResult, response);
         }
@@ -170,10 +168,10 @@ class VoiceCallService {
       const completion = await this.openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: messages,
-        max_tokens: isGoodbye ? 40 : 80,
-        temperature: 0.9,
-        presence_penalty: 0.8,
-        frequency_penalty: 0.5,
+        max_tokens: isGoodbye ? 40 : 100,
+        temperature: 1.0,
+        presence_penalty: 1.0,
+        frequency_penalty: 0.9,
         stream: false
       });
 
@@ -197,7 +195,8 @@ class VoiceCallService {
   }
 
   detectGoodbyeIntent(message) {
-    const goodbyeKeywords = ['goodbye', 'bye', 'gotta go', 'have to go', 'talk later', 'see you', 'thanks for', 'that\'s all', 'nothing else', 'i\'m done'];
+    if (!message || typeof message !== 'string') return false;
+    const goodbyeKeywords = ['goodbye', 'bye', 'gotta go', 'have to go', 'talk later', 'see you', 'thanks for', 'that\'s all', 'nothing else', 'i\'m done', 'end call', 'hang up'];
     return goodbyeKeywords.some(keyword => message.toLowerCase().includes(keyword));
   }
 
@@ -226,15 +225,21 @@ CRITICAL RULES:
 - Be encouraging and positive but authentic, not overly cheerful
 - MUST include a natural follow-up question in every response
 - If they seem to be saying goodbye, give a warm but brief farewell
+- AVOID phrases like "That's wonderful" or "I enjoy our conversations" - be more specific
+- Use varied sentence structures and conversation patterns
+- React authentically to what they share rather than using generic responses
 
 ${conversationHistory.length > 0 ? `Previous conversation: ${conversationHistory.slice(-3).map(h => `User: ${h.user} | AI: ${h.ai}`).join(' | ')}` : ''}
 
 Examples of good responses:
-- "That sounds wonderful! What was the best part of your day?"
-- "I'm glad to hear that. How did that make you feel?"
-- "That's interesting! Tell me more about your work."
-- "Sounds like you're busy! What are you looking forward to?"
-- "I really enjoyed talking with you! What's one thing you're excited about this week?"
+- "That sounds really nice! What made it so special?"
+- "Oh wow, how did that turn out for you?"
+- "That must have been quite an experience! What surprised you most?"
+- "Sounds like a busy day! What's keeping you motivated?"
+- "That's fascinating! How long have you been doing that?"
+- "I can imagine! What's your favorite part about it?"
+- "That sounds challenging. How are you handling it?"
+- "What an adventure! Would you do it again?"
 
 Remember: Each response should be unique, include a reaction to what they said, and end with a contextual follow-up question. If they're ending the conversation, be warm but concise.`;
         break;

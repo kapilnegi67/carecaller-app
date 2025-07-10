@@ -75,20 +75,32 @@ router.post('/respond', async (req, res) => {
       language: 'en-US'
     }, aiResponse);
 
-    const gather = twiml.gather({
-      input: 'speech',
-      timeout: 5,
-      speechTimeout: 'auto',
-      action: '/api/voice/respond',
-      method: 'POST'
-    });
+    const isGoodbye = VoiceCallService.detectGoodbyeIntent(SpeechResult || '');
+    
+    if (!isGoodbye) {
+      const gather = twiml.gather({
+        input: 'speech',
+        timeout: 5,
+        speechTimeout: 'auto',
+        action: '/api/voice/respond',
+        method: 'POST'
+      });
 
-    gather.pause({ length: 1 });
-
-    twiml.say({
-      voice: 'Polly.Joanna-Neural',
-      language: 'en-US'
-    }, 'Thank you for our wonderful conversation today. Take care and have a great day!');
+      gather.pause({ length: 1 });
+    } else {
+      const goodbyeMessages = [
+        'Thank you for our wonderful conversation today. Take care and have a great day!',
+        'It was lovely talking with you. Have a fantastic rest of your day!',
+        'I really enjoyed our chat. Take care and talk to you soon!',
+        'Thanks for sharing with me today. Wishing you all the best!'
+      ];
+      const randomGoodbye = goodbyeMessages[Math.floor(Math.random() * goodbyeMessages.length)];
+      
+      twiml.say({
+        voice: 'Polly.Joanna-Neural',
+        language: 'en-US'
+      }, randomGoodbye);
+    }
 
     twiml.hangup();
 
