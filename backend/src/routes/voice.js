@@ -28,7 +28,10 @@ router.post('/twiml/:callId', async (req, res) => {
 
     const twilio = require('twilio');
     const twiml = new twilio.twiml.VoiceResponse();
-    twiml.say('Sorry, there was an error with your call. Please try again later.');
+    twiml.say({
+      voice: 'Polly.Joanna-Neural',
+      language: 'en-US'
+    }, 'Sorry, there was an error with your call. Please try again later.');
     twiml.hangup();
 
     res.type('text/xml');
@@ -68,25 +71,34 @@ router.post('/respond', async (req, res) => {
     const twiml = new twilio.twiml.VoiceResponse();
 
     twiml.say({
-      voice: 'alice',
+      voice: 'Polly.Joanna-Neural',
       language: 'en-US'
     }, aiResponse);
 
     const gather = twiml.gather({
       input: 'speech',
-      timeout: 5,
+      timeout: 3,
       speechTimeout: 'auto',
       action: '/api/voice/respond',
       method: 'POST'
     });
 
+    const followUpPrompts = [
+      "What else would you like to share?",
+      "Tell me more about that.",
+      "How are you feeling about everything?",
+      "What's been on your mind lately?",
+      "Is there anything else happening in your life?"
+    ];
+    
+    const randomPrompt = followUpPrompts[Math.floor(Math.random() * followUpPrompts.length)];
     gather.say({
-      voice: 'alice',
+      voice: 'Polly.Joanna-Neural',
       language: 'en-US'
-    }, 'Is there anything else you\'d like to talk about?');
+    }, randomPrompt);
 
     twiml.say({
-      voice: 'alice',
+      voice: 'Polly.Joanna-Neural',
       language: 'en-US'
     }, 'Thank you for talking with me today. Take care and have a wonderful day!');
 
@@ -100,7 +112,10 @@ router.post('/respond', async (req, res) => {
 
     const twilio = require('twilio');
     const twiml = new twilio.twiml.VoiceResponse();
-    twiml.say('Thank you for your time. Have a great day!');
+    twiml.say({
+      voice: 'Polly.Joanna-Neural',
+      language: 'en-US'
+    }, 'Thank you for your time. Have a great day!');
     twiml.hangup();
 
     res.type('text/xml');

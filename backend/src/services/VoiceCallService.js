@@ -106,25 +106,25 @@ class VoiceCallService {
     }
 
     twiml.say({
-      voice: 'alice',
+      voice: 'Polly.Joanna-Neural',
       language: 'en-US'
     }, greeting);
 
     const gather = twiml.gather({
       input: 'speech',
-      timeout: 5,
+      timeout: 3,
       speechTimeout: 'auto',
       action: '/api/voice/respond',
       method: 'POST'
     });
 
     gather.say({
-      voice: 'alice',
+      voice: 'Polly.Joanna-Neural',
       language: 'en-US'
     }, 'Please tell me how you\'re doing, and I\'ll be here to listen and help.');
 
     twiml.say({
-      voice: 'alice',
+      voice: 'Polly.Joanna-Neural',
       language: 'en-US'
     }, 'I didn\'t hear a response. Please call us back if you need assistance. Take care!');
 
@@ -168,8 +168,11 @@ class VoiceCallService {
       const completion = await this.openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: messages,
-        max_tokens: 150,
-        temperature: 0.7
+        max_tokens: 60,
+        temperature: 0.9,
+        presence_penalty: 0.8,
+        frequency_penalty: 0.5,
+        stream: false
       });
 
       const aiResponse = completion.choices[0].message.content;
@@ -196,31 +199,31 @@ class VoiceCallService {
     
     switch (callType) {
       case 'wellness-check':
-        basePrompt = "You are a caring AI wellness assistant. Be empathetic, supportive, and keep responses under 150 characters. Focus on the person's physical and emotional wellbeing. Ask follow-up questions about their health if appropriate.";
+        basePrompt = "You are a caring AI wellness assistant. Be empathetic, supportive, and keep responses under 80 characters. Focus on the person's physical and emotional wellbeing. Ask follow-up questions about their health if appropriate.";
         break;
       case 'medication-reminder':
-        basePrompt = "You are a caring AI medication assistant. Be empathetic, supportive, and keep responses under 150 characters. Focus on medication adherence. Be encouraging about taking medications as prescribed. Ask about any side effects or concerns.";
+        basePrompt = "You are a caring AI medication assistant. Be empathetic, supportive, and keep responses under 80 characters. Focus on medication adherence. Be encouraging about taking medications as prescribed. Ask about any side effects or concerns.";
         break;
       case 'social-call':
-        basePrompt = `You are a realtime AI companion speaking on behalf of the user for a social call. You are warm, friendly, and engaging. Act as a natural conversational partner who genuinely cares about the person you're talking to. 
+        basePrompt = `You are a warm, caring AI companion having a natural conversation with ${userName || 'your friend'}. You're genuinely interested in their life and experiences.
 
-Key behaviors:
-- Be conversational and natural, not robotic or formal
-- Show genuine interest in what they share
-- Ask follow-up questions about their interests, activities, and experiences
-- Share appropriate responses that show you're listening and engaged
-- Keep responses under 150 characters for natural speech flow
-- Remember details they mention and reference them naturally
-- Be encouraging and positive while being authentic
-- Adapt your conversation style to match their energy and interests
+CRITICAL RULES:
+- Keep responses under 80 characters for natural speech flow
+- NEVER repeat the same response twice - be creative and varied
+- Ask different follow-up questions each time based on what they share
+- Reference specific details they mention in your responses
+- Be conversational, not formal or robotic
+- Show genuine curiosity about their day, feelings, activities, interests
+- Vary your conversation starters and responses naturally
+- If they mention something specific (work, family, hobbies), ask about it
+- Be encouraging and positive but authentic, not overly cheerful
 
-${userName ? `You are speaking with ${userName}.` : ''}
-${conversationHistory.length > 0 ? `Previous conversation context: ${conversationHistory.slice(-3).map(h => `${h.role}: ${h.content}`).join(' | ')}` : ''}
+${conversationHistory.length > 0 ? `Previous conversation: ${conversationHistory.slice(-3).map(h => `User: ${h.user} | AI: ${h.ai}`).join(' | ')}` : ''}
 
-Focus on providing genuine companionship and social interaction. Be the kind of friend they'd want to talk to.`;
+Remember: Each response should be unique and build naturally on what they just shared. Be the friend they want to talk to.`;
         break;
       default:
-        basePrompt = "You are a caring AI assistant. Be empathetic, supportive, and keep responses under 150 characters. Provide general support and assistance based on what the person shares with you.";
+        basePrompt = "You are a caring AI assistant. Be empathetic, supportive, and keep responses under 80 characters. Provide general support and assistance based on what the person shares with you.";
     }
     
     return basePrompt;
@@ -247,7 +250,9 @@ Focus on providing genuine companionship and social interaction. Be the kind of 
       const newTurn = {
         timestamp: new Date(),
         user: userMessage,
-        ai: aiResponse
+        ai: aiResponse,
+        topics: this.extractTopics(userMessage),
+        sentiment: this.analyzeSentiment(userMessage)
       };
 
       if (conversationDoc.exists) {
@@ -255,18 +260,66 @@ Focus on providing genuine companionship and social interaction. Be the kind of 
         const updatedMessages = [...existingMessages, newTurn].slice(-5);
         await conversationRef.update({ 
           messages: updatedMessages,
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          lastTopics: newTurn.topics,
+          overallSentiment: newTurn.sentiment
         });
       } else {
         await conversationRef.set({
           callId,
           messages: [newTurn],
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          lastTopics: newTurn.topics,
+          overallSentiment: newTurn.sentiment
         });
       }
     } catch (error) {
       console.error('Error saving conversation turn:', error);
+    }
+  }
+
+  extractTopics(message) {
+    const topics = [];
+    const keywords = ['work', 'family', 'health', 'weather', 'food', 'travel', 'hobby', 'friend', 'home', 'exercise'];
+    keywords.forEach(keyword => {
+      if (message.toLowerCase().includes(keyword)) {
+        topics.push(keyword);
+      }
+    });
+    return topics;
+  }
+
+  analyzeSentiment(message) {
+    const positiveWords = ['good', 'great', 'happy', 'wonderful', 'excellent', 'amazing', 'love', 'enjoy'];
+    const negativeWords = ['bad', 'sad', 'terrible', 'awful', 'hate', 'worried', 'stressed', 'difficult'];
+    
+    const positive = positiveWords.some(word => message.toLowerCase().includes(word));
+    const negative = negativeWords.some(word => message.toLowerCase().includes(word));
+    
+    if (positive && !negative) return 'positive';
+    if (negative && !positive) return 'negative';
+    return 'neutral';
+  }
+
+  async generateNaturalSpeech(text, voice = 'nova') {
+    try {
+      if (!this.openai) {
+        return null;
+      }
+
+      const speech = await this.openai.audio.speech.create({
+        model: "tts-1",
+        voice: voice,
+        input: text,
+        response_format: "mp3",
+        speed: 1.1
+      });
+
+      return await speech.arrayBuffer();
+    } catch (error) {
+      console.error('Error generating OpenAI speech:', error);
+      return null;
     }
   }
 }
