@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { AIVoiceService } from '../services/AIVoiceService';
+import { VapiVoiceService } from '../services/VapiVoiceService';
 import { ScheduledCall } from '../types';
 
 interface VoiceCallScreenProps {
@@ -38,7 +38,7 @@ export const VoiceCallScreen: React.FC<any> = ({ route, navigation }) => {
   const [callDuration, setCallDuration] = useState(0);
   const [currentMessage, setCurrentMessage] = useState('Connecting...');
 
-  const aiVoiceService = useRef<AIVoiceService>(new AIVoiceService());
+  const vapiVoiceService = useRef<VapiVoiceService>(new VapiVoiceService());
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const callTimer = useRef<NodeJS.Timeout | null>(null);
   const durationTimer = useRef<NodeJS.Timeout | null>(null);
@@ -64,10 +64,11 @@ export const VoiceCallScreen: React.FC<any> = ({ route, navigation }) => {
     try {
       setCurrentMessage('Initializing AI assistant...');
       
-      await aiVoiceService.current.initializeConversation({
+      await vapiVoiceService.current.initializeConversation({
         callType: scheduledCall.type,
         userName,
         userId,
+        callId: scheduledCall.id,
       });
 
       setIsConnected(true);
@@ -125,7 +126,7 @@ export const VoiceCallScreen: React.FC<any> = ({ route, navigation }) => {
     try {
       setIsListening(true);
       setCurrentMessage('Listening...');
-      await aiVoiceService.current.startListening();
+      await vapiVoiceService.current.startListening();
     } catch (error) {
       console.error('Error starting to listen:', error);
       setIsListening(false);
@@ -141,14 +142,10 @@ export const VoiceCallScreen: React.FC<any> = ({ route, navigation }) => {
       setIsProcessing(true);
       setCurrentMessage('Processing...');
       
-      await aiVoiceService.current.stopListening();
+      await vapiVoiceService.current.stopListening();
       
       setTimeout(() => {
-        const state = aiVoiceService.current.getConversationState();
-        if (state.isSpeaking) {
-          setIsSpeaking(true);
-          setCurrentMessage('AI assistant is responding...');
-        } else {
+        if (vapiVoiceService.current.isCallActive()) {
           setCurrentMessage('Tap and hold to speak');
         }
         setIsProcessing(false);
@@ -173,7 +170,7 @@ export const VoiceCallScreen: React.FC<any> = ({ route, navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await aiVoiceService.current.endConversation();
+              await vapiVoiceService.current.endConversation();
               cleanup();
               navigation.goBack();
             } catch (error) {
