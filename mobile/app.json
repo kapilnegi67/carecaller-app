@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -16,7 +16,6 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.carecaller.app",
       "infoPlist": {
-        "UIBackgroundModes": ["voip"]
       },
       "bitcode": false
     },
@@ -50,14 +49,14 @@
           }
         }
       ],
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/icon.png",
-          "color": "#ffffff",
-          "sounds": ["./assets/notification.wav"]
-        }
-      ]
+      // [
+      //   "expo-notifications",
+      //   {
+      //     "icon": "./assets/icon.png",
+      //     "color": "#ffffff",
+      //     "sounds": ["./assets/notification.wav"]
+      //   }
+      // ]
     ]
   }
 }
