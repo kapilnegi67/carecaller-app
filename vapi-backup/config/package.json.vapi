@@ -41,7 +41,6 @@
     "react-native-reanimated": "~3.6.2",
     "react-native-safe-area-context": "4.8.2",
     "react-native-screens": "~3.29.0",
-    "react-native-spokestack": "^5.0.0",
     "react-native-web": "~0.19.6"
   },
   "devDependencies": {
