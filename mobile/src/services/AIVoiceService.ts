@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+// import OpenAI from 'openai'; // Temporarily disabled to resolve WebRTC permission issues
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,15 +17,14 @@ interface ConversationState {
 }
 
 export class AIVoiceService {
-  private openai: OpenAI;
+  // private openai: OpenAI; // Temporarily disabled to resolve WebRTC permission issues
   private recording: Audio.Recording | null = null;
   private sound: Audio.Sound | null = null;
   private conversationState: ConversationState;
 
   constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY || '',
-    });
+    // this.openai = new OpenAI({
+    //   apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY || '',
     
     this.conversationState = {
       messages: [],
@@ -226,11 +225,12 @@ export class AIVoiceService {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      const response = await this.openai.audio.transcriptions.create({
-        file: new File([Buffer.from(audioFile, 'base64')], 'audio.m4a', { type: 'audio/m4a' }),
-        model: 'whisper-1',
-        language: 'en',
-      });
+      // const response = await this.openai.audio.transcriptions.create({
+      //   file: new File([Buffer.from(audioFile, 'base64')], 'audio.m4a', { type: 'audio/m4a' }),
+      //   model: 'whisper-1',
+      //   language: 'en',
+      
+      const response = { text: "Audio transcription temporarily disabled" };
 
       return response.text;
     } catch (error) {
@@ -241,12 +241,13 @@ export class AIVoiceService {
 
   private async generateAIResponse(): Promise<string> {
     try {
-      const response = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: this.conversationState.messages,
-        max_tokens: 150,
-        temperature: 0.7,
-      });
+      // const response = await this.openai.chat.completions.create({
+      //   model: 'gpt-3.5-turbo',
+      //   messages: this.conversationState.messages,
+      //   max_tokens: 150,
+      //   temperature: 0.7,
+      
+      const response = { choices: [{ message: { content: "AI response temporarily disabled for testing" } }] };
 
       return response.choices[0]?.message?.content || "I'm here to help. Please continue.";
     } catch (error) {
@@ -259,32 +260,14 @@ export class AIVoiceService {
     try {
       this.conversationState.isSpeaking = true;
 
-      const response = await this.openai.audio.speech.create({
-        model: 'tts-1',
-        voice: 'nova',
-        input: text,
-      });
-
-      const audioBuffer = await response.arrayBuffer();
-      const audioUri = `${FileSystem.documentDirectory}speech_${Date.now()}.mp3`;
+      // const response = await this.openai.audio.speech.create({
+      //   model: 'tts-1',
+      //   voice: 'nova',
+      //   input: text,
       
-      await FileSystem.writeAsStringAsync(
-        audioUri,
-        Buffer.from(audioBuffer).toString('base64'),
-        { encoding: FileSystem.EncodingType.Base64 }
-      );
-
-      const { sound } = await Audio.Sound.createAsync({ uri: audioUri });
-      this.sound = sound;
-      
-      await sound.playAsync();
-      
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          this.conversationState.isSpeaking = false;
-          sound.unloadAsync();
-        }
-      });
+      console.log('Text-to-speech temporarily disabled:', text);
+      this.conversationState.isSpeaking = false;
+      return; // Skip audio generation for testing
     } catch (error) {
       console.error('Error speaking text:', error);
       this.conversationState.isSpeaking = false;

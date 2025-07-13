@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
-// import { CallTriggerService } from './src/services/CallTriggerService'; // Temporarily disabled to isolate screen capture permission issue
 
 export default function App() {
   useEffect(() => {

@@ -1,5 +1,5 @@
 // import Vapi from '@vapi-ai/react-native';
-import { CallTriggerService } from './CallTriggerService';
+// import { CallTriggerService } from './CallTriggerService'; // Temporarily disabled to isolate screen capture permission issue
 
 interface VoiceConversationConfig {
   callType: 'wellness-check' | 'medication-reminder' | 'social-call' | 'emergency';
@@ -220,15 +220,8 @@ export class VapiVoiceService {
         notes: 'VAPI conversation completed successfully'
       };
       
-      await CallTriggerService.createCallHistory(
-        scheduledCall,
-        duration,
-        'completed',
-        '', // No Twilio SID for VAPI calls
-        'VAPI conversation completed successfully'
-      );
-      
-      console.log('✅ Call history saved successfully');
+      console.log('⚠️ Call history saving temporarily disabled - CallTriggerService import removed');
+      console.log('✅ Call history would be saved successfully (temporarily disabled)');
     } catch (error) {
       console.error('❌ Error saving call history:', error);
     }
