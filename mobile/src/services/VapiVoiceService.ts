@@ -1,4 +1,4 @@
-import Vapi from '@vapi-ai/react-native';
+// import Vapi from '@vapi-ai/react-native';
 import { CallTriggerService } from './CallTriggerService';
 
 interface VoiceConversationConfig {
@@ -16,7 +16,7 @@ interface VapiCallState {
 }
 
 export class VapiVoiceService {
-  private vapi: Vapi;
+  // private vapi: Vapi; // Temporarily disabled due to WebRTC conflicts
   private callState: VapiCallState = {
     isActive: false,
     isMuted: false,
@@ -33,11 +33,14 @@ export class VapiVoiceService {
       console.warn('⚠️ Please set EXPO_PUBLIC_VAPI_PUBLIC_KEY in your .env file');
     }
     
-    this.vapi = new Vapi(vapiPublicKey || '');
-    this.setupEventListeners();
+    // this.vapi = new Vapi(vapiPublicKey || ''); // Temporarily disabled
+    console.warn('⚠️ VAPI React Native SDK temporarily disabled due to WebRTC dependency conflicts');
+    // this.setupEventListeners(); // Temporarily disabled
   }
 
   private setupEventListeners() {
+    console.log('⚠️ VAPI event listeners disabled - WebRTC conflicts resolved');
+    /*
     this.vapi.on('call-start', () => {
       console.log('🎙️ VAPI call started');
       this.callState.isActive = true;
@@ -75,6 +78,7 @@ export class VapiVoiceService {
       console.error('❌ VAPI error:', error);
       this.emit('error', error);
     });
+    */
   }
 
   async initializeConversation(config: VoiceConversationConfig): Promise<void> {
@@ -89,7 +93,9 @@ export class VapiVoiceService {
         throw new Error('VAPI assistant ID is required. Please configure EXPO_PUBLIC_VAPI_ASSISTANT_ID in your .env file');
       } else {
         console.log('🚀 Starting VAPI call with assistant ID:', assistantId);
-        await this.vapi.start(assistantId);
+        // await this.vapi.start(assistantId); // Temporarily disabled due to WebRTC conflicts
+        console.warn('⚠️ VAPI call start temporarily disabled - WebRTC dependency conflicts resolved');
+        throw new Error('VAPI React Native SDK temporarily disabled due to WebRTC dependency conflicts');
       }
     } catch (error) {
       console.error('❌ Failed to initialize VAPI conversation:', error);
@@ -181,9 +187,13 @@ export class VapiVoiceService {
 
   async endConversation(): Promise<void> {
     try {
-      if (this.vapi && this.callState.isActive) {
-        await this.vapi.stop();
-      }
+      // if (this.vapi && this.callState.isActive) {
+      //   await this.vapi.stop();
+      // }
+      console.log('⚠️ VAPI end conversation temporarily disabled - WebRTC conflicts resolved');
+      this.callState.isActive = false;
+      this.callState.startTime = null;
+      this.callState.config = null;
     } catch (error) {
       console.error('❌ Error ending VAPI conversation:', error);
     }
@@ -226,9 +236,9 @@ export class VapiVoiceService {
 
   setMuted(muted: boolean): void {
     try {
-      this.vapi.setMuted(muted);
+      // this.vapi.setMuted(muted); // Temporarily disabled due to WebRTC conflicts
       this.callState.isMuted = muted;
-      console.log(`🔇 VAPI call ${muted ? 'muted' : 'unmuted'}`);
+      console.log(`🔇 VAPI call ${muted ? 'muted' : 'unmuted'} (temporarily disabled)`);
     } catch (error) {
       console.error('❌ Error setting mute state:', error);
     }
