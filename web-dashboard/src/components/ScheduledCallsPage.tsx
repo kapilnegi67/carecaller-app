@@ -140,7 +140,7 @@ export const ScheduledCallsPage: React.FC = () => {
     const now = new Date();
     const isOverdue = call.scheduledTime <= now && call.status === 'scheduled';
     
-    if (call.twilioCallSid) {
+    if (call.status === 'completed') {
       return <CheckCircle className="h-4 w-4 text-green-600" />;
     } else if (isOverdue) {
       return <XCircle className="h-4 w-4 text-red-600" />;
@@ -154,8 +154,8 @@ export const ScheduledCallsPage: React.FC = () => {
     const now = new Date();
     const isOverdue = call.scheduledTime <= now && call.status === 'scheduled';
     
-    if (call.twilioCallSid) {
-      return `Processed (SID: ${call.twilioCallSid.substring(0, 10)}...)`;
+    if (call.status === 'completed') {
+      return 'Completed';
     } else if (isOverdue) {
       return 'Overdue - Not Processed';
     } else if (call.status === 'scheduled') {

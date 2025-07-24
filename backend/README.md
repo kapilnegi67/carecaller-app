@@ -4,10 +4,8 @@ Backend server for the CareCaller voice calling system that monitors scheduled c
 
 ## Features
 
-- Polls Firebase `scheduledCalls` collection for due calls
-- Initiates voice calls using Twilio
-- AI-powered conversations using OpenAI
-- Updates call status and creates call history records
+- Firebase integration for user authentication and data storage
+- Health check endpoints for monitoring
 - Comprehensive error handling and logging
 
 ## Prerequisites
@@ -51,17 +49,6 @@ FIREBASE_AUTH_URI=https://accounts.google.com/o/oauth2/auth
 FIREBASE_TOKEN_URI=https://oauth2.googleapis.com/token
 ```
 
-### Twilio Configuration
-```env
-TWILIO_ACCOUNT_SID=your-twilio-account-sid
-TWILIO_AUTH_TOKEN=your-twilio-auth-token
-TWILIO_PHONE_NUMBER=+1234567890
-```
-
-### OpenAI Configuration
-```env
-OPENAI_API_KEY=your-openai-api-key
-```
 
 ### Server Configuration
 ```env
@@ -85,12 +72,9 @@ POLL_INTERVAL_MINUTES=1
    - `client_email` → `FIREBASE_CLIENT_EMAIL`
    - `client_id` → `FIREBASE_CLIENT_ID`
 
-## Twilio Setup
+## Additional Setup
 
-1. Create a [Twilio account](https://www.twilio.com)
-2. Get a phone number from the Twilio Console
-3. Find your Account SID and Auth Token in the Console Dashboard
-4. Add these values to your `.env` file
+The backend is now simplified to focus on Firebase integration and health monitoring.
 
 ## OpenAI Setup
 
@@ -103,10 +87,6 @@ POLL_INTERVAL_MINUTES=1
 ### Health Check
 - `GET /health` - Returns server status
 
-### Voice Call Webhooks (Twilio)
-- `POST /api/voice/twiml/:callId` - Generates TwiML for call
-- `POST /api/voice/respond` - Processes user speech input
-- `POST /api/voice/status/:callId` - Handles call status updates
 
 ## How It Works
 
@@ -114,13 +94,9 @@ POLL_INTERVAL_MINUTES=1
    - `status = 'scheduled'`
    - `scheduledTime <= current time`
 
-2. **Call Initiation**: When a due call is found:
-   - Updates status to 'in-progress'
-   - Retrieves user phone number from Firebase users collection
-   - Initiates Twilio call to user
-
-3. **AI Conversation**: During the call:
-   - TwiML webhook generates appropriate greeting based on call type
+2. **Health Monitoring**: The backend provides:
+   - Health check endpoints for monitoring service status
+   - Firebase connectivity verification
    - User speech is captured and sent to OpenAI for processing
    - AI generates contextual responses based on call type
 
@@ -147,9 +123,9 @@ npm run dev
 2. Schedule a test call in the mobile app for 2-3 minutes in the future
 
 3. Monitor server logs to verify:
-   - Call is detected when due
-   - Twilio call is initiated
-   - Status updates are written to Firebase
+   - Server starts successfully
+   - Firebase connection is established
+   - Health endpoints respond correctly
 
 ### Integration Testing
 
@@ -166,14 +142,9 @@ npm run dev
    - Verify service account credentials are correct
    - Check Firebase project ID matches your database
 
-2. **Twilio call failures**
-   - Verify phone numbers are in E.164 format (+1234567890)
-   - Check Twilio account has sufficient balance
-   - Verify webhook URLs are accessible
-
-3. **OpenAI API errors**
-   - Check API key is valid and has sufficient credits
-   - Verify network connectivity to OpenAI servers
+2. **Service connectivity issues**
+   - Verify network connectivity
+   - Check firewall settings
 
 ### Debugging
 
@@ -181,10 +152,8 @@ Enable detailed logging by setting `NODE_ENV=development` in your `.env` file.
 
 Check logs for:
 - Firebase connection status
-- Scheduled call detection
-- Twilio API responses
-- OpenAI API responses
-- Call status updates
+- Server startup messages
+- Health check responses
 
 ## Production Deployment
 
